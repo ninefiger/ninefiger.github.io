@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://ninefiger.github.io/2021/05/06/dnslog%E5%B9%B3%E5%8F%B0%E6%8E%A2%E7%B4%A2/</loc>
+    
+    <lastmod>2021-05-10</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://ninefiger.github.io/2020/08/01/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/</loc>
     
     <lastmod>2021-04-27</lastmod>
@@ -74,7 +81,7 @@
 
   <url>
     <loc>http://ninefiger.github.io/</loc>
-    <lastmod>2021-04-27</lastmod>
+    <lastmod>2021-05-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -82,63 +89,70 @@
   
   <url>
     <loc>http://ninefiger.github.io/tags/py%E8%84%9A%E6%9C%AC/</loc>
-    <lastmod>2021-04-27</lastmod>
+    <lastmod>2021-05-10</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://ninefiger.github.io/tags/%E6%94%BB%E9%98%B2%E7%A0%94%E7%A9%B6/</loc>
+    <lastmod>2021-05-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://ninefiger.github.io/tags/windows/</loc>
-    <lastmod>2021-04-27</lastmod>
+    <lastmod>2021-05-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://ninefiger.github.io/tags/%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C/</loc>
-    <lastmod>2021-04-27</lastmod>
+    <lastmod>2021-05-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://ninefiger.github.io/tags/%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90/</loc>
-    <lastmod>2021-04-27</lastmod>
+    <lastmod>2021-05-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://ninefiger.github.io/tags/%E6%BC%8F%E6%B4%9E%E9%A2%84%E8%AD%A6/</loc>
-    <lastmod>2021-04-27</lastmod>
+    <lastmod>2021-05-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://ninefiger.github.io/tags/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/</loc>
-    <lastmod>2021-04-27</lastmod>
+    <lastmod>2021-05-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://ninefiger.github.io/tags/%E5%8A%A0%E5%AF%86%E8%A7%A3%E5%AF%86/</loc>
-    <lastmod>2021-04-27</lastmod>
+    <lastmod>2021-05-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://ninefiger.github.io/tags/%E7%97%85%E6%AF%92%E5%88%86%E6%9E%90/</loc>
-    <lastmod>2021-04-27</lastmod>
+    <lastmod>2021-05-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://ninefiger.github.io/tags/%E9%80%86%E5%90%91%E5%AD%A6%E4%B9%A0/</loc>
-    <lastmod>2021-04-27</lastmod>
+    <lastmod>2021-05-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -147,28 +161,35 @@
   
   <url>
     <loc>http://ninefiger.github.io/categories/%E8%84%9A%E6%9C%AC/</loc>
-    <lastmod>2021-04-27</lastmod>
+    <lastmod>2021-05-10</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://ninefiger.github.io/categories/%E6%94%BB%E9%98%B2%E7%A0%94%E7%A9%B6/</loc>
+    <lastmod>2021-05-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://ninefiger.github.io/categories/cve%E5%A4%8D%E7%8E%B0/</loc>
-    <lastmod>2021-04-27</lastmod>
+    <lastmod>2021-05-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://ninefiger.github.io/categories/%E4%BB%A3%E7%A0%81%E5%AE%A1%E8%AE%A1/</loc>
-    <lastmod>2021-04-27</lastmod>
+    <lastmod>2021-05-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://ninefiger.github.io/categories/%E5%8B%92%E7%B4%A2%E7%97%85%E6%AF%92/</loc>
-    <lastmod>2021-04-27</lastmod>
+    <lastmod>2021-05-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
