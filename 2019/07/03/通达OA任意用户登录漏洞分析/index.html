@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="原文首发先知：https:&#x2F;&#x2F;xz.aliyun.com&#x2F;t&#x2F;7952某通达漏洞分析">
+<meta property="og:type" content="article">
+<meta property="og:title" content="通达OA任意用户登录漏洞分析">
+<meta property="og:url" content="http://blog.ninefiger.top/2019/07/03/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="九指">
+<meta property="og:description" content="原文首发先知：https:&#x2F;&#x2F;xz.aliyun.com&#x2F;t&#x2F;7952某通达漏洞分析">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://yanxuan.nosdn.127.net/42334a5388839dd91f914689ad693d34.png">
+<meta property="og:image" content="http://yanxuan.nosdn.127.net/43a30082b59108269b918fc3ee15d664.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E5%88%86%E6%9E%90/3.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E5%88%86%E6%9E%90/4.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E5%88%86%E6%9E%90/5.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E5%88%86%E6%9E%90/6.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E5%88%86%E6%9E%90/7.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E5%88%86%E6%9E%90/8.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E5%88%86%E6%9E%90/9.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E5%88%86%E6%9E%90/10.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E5%88%86%E6%9E%90/11.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E5%88%86%E6%9E%90/12.png">
+<meta property="article:published_time" content="2019-07-03T03:56:25.000Z">
+<meta property="article:modified_time" content="2021-08-28T01:38:32.808Z">
+<meta property="article:author" content="ninefiger">
+<meta property="article:tag" content="代码分析">
+<meta property="article:tag" content="漏洞预警">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yanxuan.nosdn.127.net/42334a5388839dd91f914689ad693d34.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>通达OA任意用户登录漏洞分析</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="九指" type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" "Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">首页</a></li>
+         
+          <li><a href="/search/">搜索</a></li>
+         
+          <li><a href="/categories/">分类</a></li>
+         
+          <li><a href="/tags/">标签</a></li>
+         
+          <li><a href="/archives/">归档</a></li>
+         
+          <li><a href="/link">链接</a></li>
+         
+          <li><a href="/about/">关于</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="上一篇 " href="/2020/05/01/%E4%B8%80%E6%AC%A1sm4%E5%89%8D%E7%AB%AF%E5%8F%82%E6%95%B0%E5%8A%A0%E5%AF%86%E4%B8%8B%E7%9A%84sql%E7%9B%B2%E6%B3%A8/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="下一篇 " href="/2019/05/13/%E7%AC%AC%E4%B8%80%E6%AC%A1%E5%88%86%E6%9E%90%E5%8B%92%E7%B4%A2%E7%97%85%E6%AF%92/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部 " href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章 " href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://blog.ninefiger.top/2019/07/03/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://blog.ninefiger.top/2019/07/03/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&text=通达OA任意用户登录漏洞分析"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://blog.ninefiger.top/2019/07/03/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=通达OA任意用户登录漏洞分析"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.ninefiger.top/2019/07/03/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&is_video=false&description=通达OA任意用户登录漏洞分析"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=通达OA任意用户登录漏洞分析&body=Check out this article: http://blog.ninefiger.top/2019/07/03/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://blog.ninefiger.top/2019/07/03/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=通达OA任意用户登录漏洞分析"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://blog.ninefiger.top/2019/07/03/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=通达OA任意用户登录漏洞分析"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://blog.ninefiger.top/2019/07/03/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=通达OA任意用户登录漏洞分析"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://blog.ninefiger.top/2019/07/03/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=通达OA任意用户登录漏洞分析"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://blog.ninefiger.top/2019/07/03/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&name=通达OA任意用户登录漏洞分析&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://blog.ninefiger.top/2019/07/03/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&t=通达OA任意用户登录漏洞分析"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%87%86%E5%A4%87"><span class="toc-number">2.</span> <span class="toc-text">准备</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%83%A8%E7%BD%B2"><span class="toc-number">3.</span> <span class="toc-text">部署</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%A1%A5%E4%B8%81%E5%AF%B9%E6%AF%94"><span class="toc-number">4.</span> <span class="toc-text">补丁对比</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90"><span class="toc-number">5.</span> <span class="toc-text">代码分析</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%E4%B8%80%E3%80%81Logincheck-code"><span class="toc-number">5.0.1.</span> <span class="toc-text">一、Logincheck_code</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E8%B7%9F%E8%B8%AA%E5%88%A4%E6%96%AD%E5%A6%82%E4%BD%95%E6%9E%84%E9%80%A0CODEUID%E5%8F%82%E6%95%B0"><span class="toc-number">5.0.2.</span> <span class="toc-text">二、跟踪判断如何构造CODEUID参数</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E6%9E%84%E9%80%A0Logincheck-code%E8%AE%BF%E9%97%AE%EF%BC%8C%E8%8E%B7%E5%8F%96%E7%99%BB%E9%99%86cookie"><span class="toc-number">5.0.3.</span> <span class="toc-text">三、构造Logincheck_code访问，获取登陆cookie</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BF%AE%E5%A4%8D%E5%BB%BA%E8%AE%AE"><span class="toc-number">6.</span> <span class="toc-text">修复建议</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">7.</span> <span class="toc-text">总结</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        通达OA任意用户登录漏洞分析
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">ninefiger</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2019-07-03T03:56:25.000Z" itemprop="datePublished">2019-07-03</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fas fa-archive"></i>
+        <a class="category-link" href="/categories/%E4%BB%A3%E7%A0%81%E5%AE%A1%E8%AE%A1/">代码审计</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link-link" href="/tags/%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90/" rel="tag">代码分析</a>, <a class="tag-link-link" href="/tags/%E6%BC%8F%E6%B4%9E%E9%A2%84%E8%AD%A6/" rel="tag">漏洞预警</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>​        4月20日，阿里云漏洞预警，通达OA任意用户登录漏洞，链接如下：<a target="_blank" rel="noopener" href="https://help.aliyun.com/noticelist/articleid/1060277736.html">https://help.aliyun.com/noticelist/articleid/1060277736.html</a> </p>
+<h3 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h3><ul>
+<li><p>某盘下载的TDOA11.0.exe</p>
+</li>
+<li><p>文件对比工具（DiffMerge等）</p>
+</li>
+<li><p>zend解密小工具</p>
+</li>
+</ul>
+<h3 id="部署"><a href="#部署" class="headerlink" title="部署"></a>部署</h3><pre><code>    1. 直接安装TDOA11.0.exe，版本号为11.0.190911 
+      2. 打开“通达应用服务控制中心”启动服务，测试web是否能正常访问
+      3. 使用OfficeAuto更新程序到11.4.200323 ，备份webroot文件夹
+      4. 更新到11.4.200417，拷贝webroot
+</code></pre>
+<p><img src="http://yanxuan.nosdn.127.net/42334a5388839dd91f914689ad693d34.png" alt="1.png"></p>
+<ol start="5">
+<li>原始的webroot中文件使用zend加密压缩，此处需要使用zend解密工具批量解密为正常的PHP文件</li>
+</ol>
+<p><img src="http://yanxuan.nosdn.127.net/43a30082b59108269b918fc3ee15d664.png" alt="2.png"> </p>
+<h3 id="补丁对比"><a href="#补丁对比" class="headerlink" title="补丁对比"></a>补丁对比</h3><ol>
+<li>对比更新前后的webroot文件</li>
+</ol>
+<p><img src="/img/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E5%88%86%E6%9E%90/3.png" alt="3.png"> </p>
+<ol start="2">
+<li>如图更新对$UID进行初始化，并判断是否为0</li>
+</ol>
+<p><img src="/img/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E5%88%86%E6%9E%90/4.png" alt="4.png"> </p>
+<p><img src="/img/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E5%88%86%E6%9E%90/5.png" alt="5.png"> </p>
+<p>由此可见UID是个关键参数，筛选文件对比结果，很清晰判断出更新补丁中哪些文件有相关逻辑。</p>
+<h3 id="代码分析"><a href="#代码分析" class="headerlink" title="代码分析"></a>代码分析</h3><p>​    重点对更新文件进行分析，使用编辑器导入web项目，分析版本11.4的代码逻辑。</p>
+<h5 id="一、Logincheck-code"><a href="#一、Logincheck-code" class="headerlink" title="一、Logincheck_code"></a>一、Logincheck_code</h5><p><img src="/img/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E5%88%86%E6%9E%90/6.png" alt="6.png"> </p>
+<p>$UID有POST请求参数获取，访问该URL共需两个参数：UID &amp; CODEUID；</p>
+<p>继续向下分析，中间的判断过程，仅对用户登陆安全登陆限制进行了判断，在如下位置后，直接存入对应UID的SESSION。</p>
+<p><img src="/img/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E5%88%86%E6%9E%90/7.png" alt="7.png"> </p>
+<h5 id="二、跟踪判断如何构造CODEUID参数"><a href="#二、跟踪判断如何构造CODEUID参数" class="headerlink" title="二、跟踪判断如何构造CODEUID参数"></a>二、跟踪判断如何构造CODEUID参数</h5><p>​    更新文件中，login_code去掉了一些方法，从内容看出如果login_codeuid为空，访问该php时，会有getUniqid()返回CODEUID。</p>
+<p><img src="/img/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E5%88%86%E6%9E%90/8.png" alt="8.png"> </p>
+<h5 id="三、构造Logincheck-code访问，获取登陆cookie"><a href="#三、构造Logincheck-code访问，获取登陆cookie" class="headerlink" title="三、构造Logincheck_code访问，获取登陆cookie"></a>三、构造Logincheck_code访问，获取登陆cookie</h5><ol>
+<li>获取code_uid</li>
+</ol>
+<p><img src="/img/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E5%88%86%E6%9E%90/9.png" alt="9.png"> </p>
+<ol start="2">
+<li>构造POST请求，获取cookie，默认情况下，UID=1是admin账号，为系统管理员。</li>
+</ol>
+<p> <img src="/img/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E5%88%86%E6%9E%90/10.png" alt="10.png"></p>
+<p><img src="/img/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E5%88%86%E6%9E%90/11.png" alt="11.png"> </p>
+<ol start="3">
+<li>使用Cookie访问系统</li>
+</ol>
+<p><img src="/img/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E5%88%86%E6%9E%90/12.png" alt="12.png"> </p>
+<h3 id="修复建议"><a href="#修复建议" class="headerlink" title="修复建议"></a>修复建议</h3><ol>
+<li><p>未更新补丁前，备份logincheck_code.php，将该文件移除webroot目录；或使用WAF等安全产品，禁止logincheck_code.php访问</p>
+</li>
+<li><p>更新官方补丁</p>
+</li>
+</ol>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ol>
+<li><p>需要验证历史版本的从11.0更新时，可以逐步版本更新，备份webroot文件夹，验证对应版本是，更换webroot即可</p>
+</li>
+<li><p>第一次尝试对比补丁去验证漏洞，对于更新点比较少的应用，可以很快定位</p>
+</li>
+<li><p>登陆验证类功能点，只做状态判断，尽量不要附带其他功能</p>
+</li>
+</ol>
+<p>Ps: 文章审核了快3个月。。。。。。</p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">首页</a></li>
+         
+          <li><a href="/search/">搜索</a></li>
+         
+          <li><a href="/categories/">分类</a></li>
+         
+          <li><a href="/tags/">标签</a></li>
+         
+          <li><a href="/archives/">归档</a></li>
+         
+          <li><a href="/link">链接</a></li>
+         
+          <li><a href="/about/">关于</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%87%86%E5%A4%87"><span class="toc-number">2.</span> <span class="toc-text">准备</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%83%A8%E7%BD%B2"><span class="toc-number">3.</span> <span class="toc-text">部署</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%A1%A5%E4%B8%81%E5%AF%B9%E6%AF%94"><span class="toc-number">4.</span> <span class="toc-text">补丁对比</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90"><span class="toc-number">5.</span> <span class="toc-text">代码分析</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%E4%B8%80%E3%80%81Logincheck-code"><span class="toc-number">5.0.1.</span> <span class="toc-text">一、Logincheck_code</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E8%B7%9F%E8%B8%AA%E5%88%A4%E6%96%AD%E5%A6%82%E4%BD%95%E6%9E%84%E9%80%A0CODEUID%E5%8F%82%E6%95%B0"><span class="toc-number">5.0.2.</span> <span class="toc-text">二、跟踪判断如何构造CODEUID参数</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E6%9E%84%E9%80%A0Logincheck-code%E8%AE%BF%E9%97%AE%EF%BC%8C%E8%8E%B7%E5%8F%96%E7%99%BB%E9%99%86cookie"><span class="toc-number">5.0.3.</span> <span class="toc-text">三、构造Logincheck_code访问，获取登陆cookie</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BF%AE%E5%A4%8D%E5%BB%BA%E8%AE%AE"><span class="toc-number">6.</span> <span class="toc-text">修复建议</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">7.</span> <span class="toc-text">总结</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://blog.ninefiger.top/2019/07/03/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://blog.ninefiger.top/2019/07/03/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&text=通达OA任意用户登录漏洞分析"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://blog.ninefiger.top/2019/07/03/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=通达OA任意用户登录漏洞分析"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.ninefiger.top/2019/07/03/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&is_video=false&description=通达OA任意用户登录漏洞分析"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=通达OA任意用户登录漏洞分析&body=Check out this article: http://blog.ninefiger.top/2019/07/03/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://blog.ninefiger.top/2019/07/03/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=通达OA任意用户登录漏洞分析"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://blog.ninefiger.top/2019/07/03/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=通达OA任意用户登录漏洞分析"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://blog.ninefiger.top/2019/07/03/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=通达OA任意用户登录漏洞分析"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://blog.ninefiger.top/2019/07/03/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=通达OA任意用户登录漏洞分析"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://blog.ninefiger.top/2019/07/03/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&name=通达OA任意用户登录漏洞分析&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://blog.ninefiger.top/2019/07/03/%E9%80%9A%E8%BE%BEOA%E4%BB%BB%E6%84%8F%E7%94%A8%E6%88%B7%E7%99%BB%E5%BD%95%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&t=通达OA任意用户登录漏洞分析"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2017-2021
+    ninefiger
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">首页</a></li>
+         
+          <li><a href="/search/">搜索</a></li>
+         
+          <li><a href="/categories/">分类</a></li>
+         
+          <li><a href="/tags/">标签</a></li>
+         
+          <li><a href="/archives/">归档</a></li>
+         
+          <li><a href="/link">链接</a></li>
+         
+          <li><a href="/about/">关于</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+
+</body>
+</html>
