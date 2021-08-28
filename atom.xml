@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  <title>九指</title>
+  <title>九指 | [ninefiger&#39;s blog]</title>
   
-  
+  <subtitle>九指</subtitle>
   <link href="http://blog.ninefiger.top/atom.xml" rel="self"/>
   
   <link href="http://blog.ninefiger.top/"/>
