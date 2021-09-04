@@ -123,6 +123,13 @@
   </url>
   
   <url>
+    <loc>http://blog.ninefiger.top/tags/%E6%94%BB%E9%98%B2%E7%A0%94%E7%A9%B6/</loc>
+    <lastmod>2021-09-04</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>http://blog.ninefiger.top/tags/windows/</loc>
     <lastmod>2021-09-04</lastmod>
     <changefreq>daily</changefreq>
@@ -131,13 +138,6 @@
   
   <url>
     <loc>http://blog.ninefiger.top/tags/%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C/</loc>
-    <lastmod>2021-09-04</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://blog.ninefiger.top/tags/%E6%94%BB%E9%98%B2%E7%A0%94%E7%A9%B6/</loc>
     <lastmod>2021-09-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -202,14 +202,14 @@
   </url>
   
   <url>
-    <loc>http://blog.ninefiger.top/categories/cve%E5%A4%8D%E7%8E%B0/</loc>
+    <loc>http://blog.ninefiger.top/categories/%E6%94%BB%E9%98%B2%E7%A0%94%E7%A9%B6/</loc>
     <lastmod>2021-09-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>http://blog.ninefiger.top/categories/%E6%94%BB%E9%98%B2%E7%A0%94%E7%A9%B6/</loc>
+    <loc>http://blog.ninefiger.top/categories/cve%E5%A4%8D%E7%8E%B0/</loc>
     <lastmod>2021-09-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
