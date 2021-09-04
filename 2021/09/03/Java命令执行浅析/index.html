@@ -24,10 +24,10 @@
 <meta property="og:image" content="http://blog.ninefiger.top/img/Java命令执行浅析/09.PNG">
 <meta property="og:image" content="http://blog.ninefiger.top/img/Java命令执行浅析/10.PNG">
 <meta property="og:image" content="http://blog.ninefiger.top/img/Java命令执行浅析/11.png">
-<meta property="og:image" content="http://blog.ninefiger.top/img/Java命令执行浅析/12.PNG">
-<meta property="og:image" content="http://blog.ninefiger.top/img/Java命令执行浅析/13.PNG">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Java命令执行浅析/12.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Java命令执行浅析/13.png">
 <meta property="article:published_time" content="2021-09-03T09:19:02.000Z">
-<meta property="article:modified_time" content="2021-09-04T07:34:46.800Z">
+<meta property="article:modified_time" content="2021-09-04T09:14:29.363Z">
 <meta property="article:author" content="ninefiger">
 <meta property="article:tag" content="基础">
 <meta property="article:tag" content="代码审计">
@@ -328,9 +328,9 @@
 <img src="/img/Java命令执行浅析/11.png" alt="11" style="zoom:50%;" />
 
 <p>继续调试一下</p>
-<img src="/img/Java命令执行浅析/12.PNG" alt="12" style="zoom: 50%;" />
+<img src="/img/Java命令执行浅析/12.png" alt="12" style="zoom: 50%;" />
 
-<img src="/img/Java命令执行浅析/13.PNG" alt="13" style="zoom: 50%;" />
+<img src="/img/Java命令执行浅析/13.png" alt="13" style="zoom: 50%;" />
 
 <p>在实例化<strong>UNIXProcess</strong>对象后执行子进程时，字节数组第一位是待执行的命令，其他的都作为参数处理，而我理解的<em>命令行</em>中执行的管道符是由于<em>bash</em>或<em>命令提示符</em> 会对管道符、重定向符等特殊符号赋予特殊的含义吧。方法的话可以使用<code>new String[]&#123;&quot;bash&quot;,&quot;-c&quot;,&quot;&quot;&#125;</code>来避免这些符号带来的困扰。</p>
 <h2 id="结束"><a href="#结束" class="headerlink" title="结束"></a>结束</h2><ol>
