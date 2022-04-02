@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="无关漏洞危害">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring Framework RCE分析">
+<meta property="og:url" content="http://blog.ninefiger.top/2022/04/02/Spring%20Framework%20RCE%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="九指 | [ninefiger&#39;s blog]">
+<meta property="og:description" content="无关漏洞危害">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403000622503.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403000650938.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403000717238.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403000749580.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403000823543.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403000839778.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403000911356.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403000954194.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403001037708.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403001137387.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403001152332.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403001209942.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403001226852.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403001303500.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403001419499.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403001419499.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403001448066.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403001504964.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403001525042.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403001541124.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403001557353.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403001616324.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403001634997.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403001653551.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403001715044.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403001733958.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403001757430.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403001813935.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403001830287.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403001849265.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403001924129.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403002011555.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403002037838.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403002059502.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403002119066.png">
+<meta property="article:published_time" content="2022-04-02T07:00:00.000Z">
+<meta property="article:modified_time" content="2022-04-02T16:32:53.804Z">
+<meta property="article:author" content="ninefiger">
+<meta property="article:tag" content="漏洞分析">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://blog.ninefiger.top/img/Spring%20Framework%20RCE分析/image-20220403000622503.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/logo.png">
+        
+      
+    
+    <!-- title -->
+    <title>Spring Framework RCE分析</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="九指 | [ninefiger&#39;s blog]" type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" "Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">首页</a></li>
+         
+          <li><a href="/search/">搜索</a></li>
+         
+          <li><a href="/categories/">分类</a></li>
+         
+          <li><a href="/tags/">标签</a></li>
+         
+          <li><a href="/archives/">归档</a></li>
+         
+          <li><a href="/link">链接</a></li>
+         
+          <li><a href="/atom.xml">RSS</a></li>
+         
+          <li><a href="/about/">关于</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="下一篇 " href="/2021/09/03/Java%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%E6%B5%85%E6%9E%90/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部 " href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章 " href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://blog.ninefiger.top/2022/04/02/Spring%20Framework%20RCE%E5%88%86%E6%9E%90/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://blog.ninefiger.top/2022/04/02/Spring%20Framework%20RCE%E5%88%86%E6%9E%90/&text=Spring Framework RCE分析"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://blog.ninefiger.top/2022/04/02/Spring%20Framework%20RCE%E5%88%86%E6%9E%90/&title=Spring Framework RCE分析"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.ninefiger.top/2022/04/02/Spring%20Framework%20RCE%E5%88%86%E6%9E%90/&is_video=false&description=Spring Framework RCE分析"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Spring Framework RCE分析&body=Check out this article: http://blog.ninefiger.top/2022/04/02/Spring%20Framework%20RCE%E5%88%86%E6%9E%90/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://blog.ninefiger.top/2022/04/02/Spring%20Framework%20RCE%E5%88%86%E6%9E%90/&title=Spring Framework RCE分析"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://blog.ninefiger.top/2022/04/02/Spring%20Framework%20RCE%E5%88%86%E6%9E%90/&title=Spring Framework RCE分析"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://blog.ninefiger.top/2022/04/02/Spring%20Framework%20RCE%E5%88%86%E6%9E%90/&title=Spring Framework RCE分析"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://blog.ninefiger.top/2022/04/02/Spring%20Framework%20RCE%E5%88%86%E6%9E%90/&title=Spring Framework RCE分析"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://blog.ninefiger.top/2022/04/02/Spring%20Framework%20RCE%E5%88%86%E6%9E%90/&name=Spring Framework RCE分析&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://blog.ninefiger.top/2022/04/02/Spring%20Framework%20RCE%E5%88%86%E6%9E%90/&t=Spring Framework RCE分析"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#0x01-%E5%89%8D%E8%A8%80"><span class="toc-number">1.</span> <span class="toc-text">0x01 前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x02%E5%8F%82%E6%95%B0%E7%BB%91%E5%AE%9A%E6%B5%81%E7%A8%8B"><span class="toc-number">2.</span> <span class="toc-text">0x02参数绑定流程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Spring%E8%BF%90%E8%A1%8C%E6%B5%81%E7%A8%8B%E5%9B%BE"><span class="toc-number">2.1.</span> <span class="toc-text">1. Spring运行流程图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E7%BB%9F%E4%B8%80%E8%B0%83%E5%BA%A6%E6%96%B9%E6%B3%95"><span class="toc-number">2.2.</span> <span class="toc-text">2. 统一调度方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%A4%84%E7%90%86%E9%80%82%E9%85%8D%E5%99%A8%E7%9A%84%E5%A4%84%E7%90%86%E6%96%B9%E6%B3%95"><span class="toc-number">2.3.</span> <span class="toc-text">3. 处理适配器的处理方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E8%B0%83%E7%94%A8%E4%B8%8E%E5%A4%84%E7%90%86"><span class="toc-number">2.4.</span> <span class="toc-text">4. 调用与处理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-%E8%BF%9B%E5%85%A5%E5%8F%82%E6%95%B0%E7%BB%91%E5%AE%9A"><span class="toc-number">2.5.</span> <span class="toc-text">5. 进入参数绑定</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x02-%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90"><span class="toc-number">3.</span> <span class="toc-text">0x02 漏洞分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%8F%82%E6%95%B0%E5%90%8D%E7%9A%84%E5%88%86%E5%89%B2%E5%A4%84%E7%90%86"><span class="toc-number">3.1.</span> <span class="toc-text">1. 参数名的分割处理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%8F%82%E6%95%B0%E7%BB%91%E5%AE%9A%E7%9A%84%E6%84%8F%E5%A4%96%E6%83%85%E5%86%B5"><span class="toc-number">3.2.</span> <span class="toc-text">2. 参数绑定的意外情况</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%8F%91%E9%80%81class-x%E5%8F%82%E6%95%B0%E9%87%8D%E6%96%B0%E8%B0%83%E8%AF%95"><span class="toc-number">3.3.</span> <span class="toc-text">3. 发送class.x参数重新调试</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#04-JDK%E4%B8%8EBypass"><span class="toc-number">3.4.</span> <span class="toc-text">04. JDK与Bypass</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x03-%E5%88%A9%E7%94%A8%E9%93%BE%E6%9E%84%E9%80%A0"><span class="toc-number">4.</span> <span class="toc-text">0x03 利用链构造</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#01-%E7%9B%B8%E5%AF%B9%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98"><span class="toc-number">4.1.</span> <span class="toc-text">01 相对路径问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#02-%E5%A4%9A%E6%AC%A1%E4%B8%8A%E4%BC%A0%E7%9A%84%E9%97%AE%E9%A2%98"><span class="toc-number">4.2.</span> <span class="toc-text">02. 多次上传的问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#03-%E7%89%B9%E6%AE%8A%E7%AC%A6%E5%8F%B7%E7%9A%84%E9%97%AE%E9%A2%98"><span class="toc-number">4.3.</span> <span class="toc-text">03. 特殊符号的问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#04-SpringBoot"><span class="toc-number">4.4.</span> <span class="toc-text">04. SpringBoot</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x04-%E9%98%B6%E6%AE%B5%E6%80%BB%E7%BB%93"><span class="toc-number">5.</span> <span class="toc-text">0x04 阶段总结</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        Spring Framework RCE分析
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">ninefiger</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2022-04-02T07:00:00.000Z" itemprop="datePublished">2022-04-02</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fas fa-archive"></i>
+        <a class="category-link" href="/categories/%E6%94%BB%E9%98%B2%E7%A0%94%E7%A9%B6/">攻防研究</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link-link" href="/tags/%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/" rel="tag">漏洞分析</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <h2 id="0x01-前言"><a href="#0x01-前言" class="headerlink" title="0x01 前言"></a>0x01 前言</h2><p>&emsp;&emsp;因为第一次调试spring框架，首先分析spring的参数绑定，从预警和后来的poc来看，和spring的参数绑定有关系</p>
+<h2 id="0x02参数绑定流程"><a href="#0x02参数绑定流程" class="headerlink" title="0x02参数绑定流程"></a>0x02参数绑定流程</h2><p>&emsp;&emsp;先记录几个单词的意思</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Handler:    [&#39;hændlə] 处理者、处理程序</span><br><span class="line">Disptacher: [dis&#39;pætʃə] 调度员、调度程序</span><br><span class="line">Mapping:    [&#39;mæpiŋ] 映射</span><br><span class="line">Adapter:    [ə&#39;dæptə]  适配器</span><br><span class="line">Argument:   [&#39;ɑ:ɡjumənt] 逻辑论证</span><br></pre></td></tr></table></figure>
+<h3 id="1-Spring运行流程图"><a href="#1-Spring运行流程图" class="headerlink" title="1. Spring运行流程图"></a>1. Spring运行流程图</h3><img src="/img/Spring Framework RCE分析/image-20220403000622503.png" alt="image-20220403000622503" style="zoom: 33%;" />
+
+<h3 id="2-统一调度方法"><a href="#2-统一调度方法" class="headerlink" title="2. 统一调度方法"></a>2. 统一调度方法</h3><p>&emsp;&emsp;先找到统一的调度器方法，并设置断点org/springframework/web/servlet/DispatcherServlet.class#doDispatch()<br>图中三个断点位置</p>
+<ul>
+<li>第一个<code>this.checkMultipart()</code> ，这里看到就断下来了，我记得之前有个漏洞好像和这个有关系。判断是否是上传包</li>
+<li>第二个断点是<code>HandlerAdapter</code>的初始化；这里看到下面还有一个判断是否是Get或HEAD方法，并判断是否支持这个方法</li>
+<li>第三个断点即进入<code>HandlerAdapter</code>的处理方法，HandlerAdapter.handle</li>
+</ul>
+<img src="/img/Spring Framework RCE分析/image-20220403000650938.png" alt="image-20220403000650938" style="zoom: 50%;" />
+
+<h3 id="3-处理适配器的处理方法"><a href="#3-处理适配器的处理方法" class="headerlink" title="3. 处理适配器的处理方法"></a>3. 处理适配器的处理方法</h3><p>&emsp;&emsp;步入上面ha.handle()的处理方法中，通过<code>this.invokeHandlerMethod()</code>方法获取熟悉的ModelAndView对象</p>
+<img src="/img/Spring Framework RCE分析/image-20220403000717238.png" alt="image-20220403000717238" style="zoom: 50%;" />
+
+<h3 id="4-调用与处理"><a href="#4-调用与处理" class="headerlink" title="4. 调用与处理"></a>4. 调用与处理</h3><p>&emsp;&emsp;继上一步，进入org/springframework/web/servlet/mvc/method/annotation/RequestMappingHandlerAdapter.invokeHandlerMethod ，图中断点位置进入<code>invokeAndHandle</code>（调用和处理）方法，断点前是一些ModelAndViewContainer和AsyncWebRequest对象的初始化</p>
+<img src="/img/Spring Framework RCE分析/image-20220403000749580.png" alt="image-20220403000749580" style="zoom:50%;" />
+
+<p>&emsp;&emsp;接着进入invokeAndHandle方法后，首先执行的就是<code>invokeForRequest</code></p>
+<p>![image-20220403000808200](/img/Spring Framework RCE分析/image-20220403000808200.png)</p>
+<p>&emsp;&emsp;下一步进入invokeForRequest方法，这里从字面上可以看出下一步是获取方法的值<code>（this.getMethodArgumentValues）</code></p>
+<img src="/img/Spring Framework RCE分析/image-20220403000823543.png" alt="image-20220403000823543" style="zoom:50%;" />
+
+<h3 id="5-进入参数绑定"><a href="#5-进入参数绑定" class="headerlink" title="5. 进入参数绑定"></a>5. 进入参数绑定</h3><p>a. 进入上一步的 <code>getMethodArgumentValues()</code> 在<code>this.resolvers.resolveArgument</code> 方法设置断点</p>
+<img src="/img/Spring Framework RCE分析/image-20220403000839778.png" alt="image-20220403000839778" style="zoom: 50%;" />
+
+<p>b. 进入该方法，执行到</p>
+<p>org/springframework/web/method/annotation/ModelAttributeMethodProcessor#resolveArgument 在图中断点位置，可以看到<code>bindRequestParameters()</code>，可以把它理解为”绑定请求参数”</p>
+<img src="/img/Spring Framework RCE分析/image-20220403000911356.png" alt="image-20220403000911356" style="zoom:50%;" />
+
+<p>c. 指定到DataBinder#doBind()方法，进入<code>this.applyPropertyValues()</code></p>
+<img src="/img/Spring Framework RCE分析/image-20220403000954194.png" alt="image-20220403000954194" style="zoom:50%;" />
+
+<img src="/img/Spring Framework RCE分析/image-20220403001037708.png" alt="image-20220403001037708" style="zoom:50%;" />
+
+<p>d. 跟入<code>setPropertyValue </code>方法，可以看到nestedPa是一个封装了Object[POJO.Student]的BeanWrapperImpl对象</p>
+<img src="/img/Spring Framework RCE分析/image-20220403001137387.png" alt="image-20220403001137387" style="zoom:50%;" />
+
+<h2 id="0x02-漏洞分析"><a href="#0x02-漏洞分析" class="headerlink" title="0x02 漏洞分析"></a>0x02 漏洞分析</h2><p>  &emsp;&emsp;这里笔记分割的比较突然，主要是因为下面的流程就慢慢和漏洞有关联</p>
+<h3 id="1-参数名的分割处理"><a href="#1-参数名的分割处理" class="headerlink" title="1. 参数名的分割处理"></a>1. 参数名的分割处理</h3><p>a. 先是接上上面参数绑定的执行流程中，<code>setPropertyValue</code>方法，如图所示通过</p>
+<img src="/img/Spring Framework RCE分析/image-20220403001152332.png" alt="image-20220403001152332" style="zoom:50%;" />
+
+<p>b. 通过PropertyAccessorUtils.getFirstNestedPropertySeparatorIndex(propertyPath) 计算pos为5，查看getFirstNestedPropertySeparatorIndex计算的方法，这里是计算第一个字符到第一个. 中间字符的个数，再进行分割，如class.x pos就是5，去除class</p>
+<ul>
+<li><p>关键位置还是<code>this.getNestedPropertyAccessor(nestedProperty)</code>在循环处理</p>
+<img src="/img/Spring Framework RCE分析/image-20220403001209942.png" alt="image-20220403001209942" style="zoom:50%;" /></li>
+</ul>
+<h3 id="2-参数绑定的意外情况"><a href="#2-参数绑定的意外情况" class="headerlink" title="2. 参数绑定的意外情况"></a>2. 参数绑定的意外情况</h3><ul>
+<li>继续调试，在参数绑定的流程中，发现除了当前POJO对象的一些字段以外，多了一个class字段</li>
+<li>这里为了防止混淆，重新提交<code>id.x=666&amp;name=nine</code>这样类型的参数，继续调试，进入<code>getNestedPropertyAccessor</code>方法</li>
+</ul>
+<p>a. 继续步入，程序通过getPropertyValue获取一个Object，tokens在前面是nestedProperty的格式化效验，也就是参数中的id</p>
+<img src="/img/Spring Framework RCE分析/image-20220403001226852.png" alt="image-20220403001226852" style="zoom:50%;" />
+
+<p>b. 进入该方法，指定到<code>getLocalPropertyHandler</code>，关注一下这段代码的执行</p>
+<img src="/img/Spring Framework RCE分析/image-20220403001303500.png" alt="image-20220403001303500" style="zoom:50%;" />
+
+<ul>
+<li>getPropertyDescriptor 这个地方可以画重点了，这里可以看到，获取<code>propertyDescriptorCache </code>这个Map对象中的值，key对应这POJO中的字段，但是这里多了一个<code>class</code>键值对。</li>
+</ul>
+<img src="/img/Spring Framework RCE分析/image-20220403001419499.png" alt="image-20220403001419499" style="zoom:50%;" />
+
+<p>​    带着class这个键值对的疑惑，回到上一步CachedIntrospectionResults 中，可以看到strongClassCache 中每一个Value对象的<code>propertyDescriptorCache</code>都带有这个class键值对</p>
+<img src="/img/Spring Framework RCE分析/image-20220403001419499.png" alt="image-20220403001419499" style="zoom:50%;" />
+
+<h3 id="3-发送class-x参数重新调试"><a href="#3-发送class-x参数重新调试" class="headerlink" title="3. 发送class.x参数重新调试"></a>3. 发送class.x参数重新调试</h3><ul>
+<li>此时在post包中输入class.x=test参数调试进一步分析</li>
+</ul>
+<p>a. 在获取了getPropertyValue()即POJO.Student后，回到getNestedPropertyAccessor 方法，继续执行到<code>this.newNestedPropertyAccessor(value, this.nestedPath + canonicalName + &quot;.&quot;);</code></p>
+<img src="/img/Spring Framework RCE分析/image-20220403001448066.png" alt="image-20220403001448066" style="zoom:50%;" />
+
+<p>b. 实例化 newNestedPropertyAccessor 方法，赋值给nestedPa，并再次进入PropertyAccessorUtils.getFirstNestedPropertySeparatorIndex(propertyPath) 的循环调用中，<code>new newNestedPropertyAccessor</code>实例化的一个新对象是包装java.lang.Class的BeanWrapperImpl类</p>
+<img src="/img/Spring Framework RCE分析/image-20220403001504964.png" alt="image-20220403001504964" style="zoom:50%;" />
+
+<p>c. 可以看到之前的循环处理x.x.x.x参数名的代码，新的nestedPath，继续调用<code>getFirstNestedPropertySeparatorIndex(propertyPath)</code> 方法</p>
+<img src="/img/Spring Framework RCE分析/image-20220403001525042.png" alt="image-20220403001525042" style="zoom:50%;" />
+
+<pre><code> 分析到这里，已经可以发现spring在参数绑定时，对于正常的参数和x.x=aaa这种参数的不同处理
+</code></pre>
+<h3 id="04-JDK与Bypass"><a href="#04-JDK与Bypass" class="headerlink" title="04. JDK与Bypass"></a>04. JDK与Bypass</h3><p>​    回头看一下CVE-2010-1622发现看的顺畅多了，但是class.classloader用不了了，这里切换到jdk8，在包装对象转换流程中看一下，发现JDK9+多了一个module属性。</p>
+<ul>
+<li><p>JDK8.x获取到的class</p>
+<img src="/img/Spring Framework RCE分析/image-20220403001541124.png" alt="image-20220403001541124" style="zoom:50%;" />
+
+<ul>
+<li><p>JDK9+</p>
+<img src="/img/Spring Framework RCE分析/image-20220403001557353.png" alt="image-20220403001557353" style="zoom:50%;" /></li>
+</ul>
+</li>
+</ul>
+<p>​    Class.module是JDK9+后的新特性，JPMS模块化，暂时理解是将以前的classpath的这种统一调用的方法，可扩展为模块化调用</p>
+<h2 id="0x03-利用链构造"><a href="#0x03-利用链构造" class="headerlink" title="0x03 利用链构造"></a>0x03 利用链构造</h2><p>a. 首先在strongClassCache中看一下Class类的propertyDescriptoCache有哪些可以调用的<code>GenericTypeAwarePropertyDescriptor</code>对象</p>
+<img src="/img/Spring Framework RCE分析/image-20220403001616324.png" alt="image-20220403001616324" style="zoom:50%;" />
+
+<p>b. 使用<code>class.module.x=test</code>作为参数，请求，在nestedPa这个地方，获取了类型为java.lang.Module的包装类</p>
+<img src="/img/Spring Framework RCE分析/image-20220403001634997.png" alt="image-20220403001634997" style="zoom:50%;" />
+
+<p>c. 继续构造class.module.x.x，打开propertyDescriptoCache，看到了<code>classLoader</code></p>
+<img src="/img/Spring Framework RCE分析/image-20220403001653551.png" alt="image-20220403001653551" style="zoom:50%;" />
+
+<p>d. 这里也就对应<code>java.lang.Module</code>类中，成员的get方法</p>
+<img src="/img/Spring Framework RCE分析/image-20220403001715044.png" alt="image-20220403001715044" style="zoom:50%;" />
+
+<p>e. 这里获取的classLoader是tomcat的类加载器<code>org.apache.catalina.loader.ParallelWebappClassLoader</code>类</p>
+<p>org.springframework.beans.BeanWrapperImpl: wrapping object [org.apache.catalina.loader.ParallelWebappClassLoader@71d41616]</p>
+<img src="/img/Spring Framework RCE分析/image-20220403001733958.png" alt="image-20220403001733958" style="zoom:50%;" />
+
+<p>f.参考S2-020在tomcat8中的利用链思路</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">tomcat中的利用链</span><br><span class="line">org.apache.catalina.loader.ParallelWebappClassLoader</span><br><span class="line">  org.apache.catalina.webresources.StandardRoot</span><br><span class="line">    org.apache.catalina.core.StandardContext</span><br><span class="line">      org.apache.catalina.core.StandardHost</span><br><span class="line">        org.apache.catalina.core.StandardPipeline</span><br><span class="line">          org.apache.catalina.valves.AccessLogValve</span><br></pre></td></tr></table></figure>
+
+<img src="/img/Spring Framework RCE分析/image-20220403001757430.png" alt="image-20220403001757430" style="zoom:50%;" />
+
+<p>​    最终的payload也是通过操作tomcat启动后<code>AccessLogValve</code>的对象，指定日志输出位置，并填充日志内容，写入WebShell</p>
+<h3 id="01-相对路径问题"><a href="#01-相对路径问题" class="headerlink" title="01 相对路径问题"></a>01 相对路径问题</h3><pre><code> 这里在debug的时候总是写不到相对目录，后来在调试过程中，发现idea直接部署的项目会临时将配置放在一个缓存路径下，而真实的tomcat部署的项目，可以直接通过webapps/ROOT使用相对路径
+</code></pre>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">class.module.classLoader.resources.context.parent.pipeline.first.directory&#x3D;webapps&#x2F;ROOT</span><br></pre></td></tr></table></figure>
+
+<img src="/img/Spring Framework RCE分析/image-20220403001813935.png" alt="image-20220403001813935" style="zoom:50%;" />
+
+<p>​    AccessLogValve中会新建日志文件及路径涉及的文件夹，也就是说指定webapps/自定义一个文件夹就可以，不需要必须有ROOT</p>
+<img src="/img/Spring Framework RCE分析/image-20220403001830287.png" alt="image-20220403001830287" style="zoom:50%;" />
+
+<pre><code> AccessLogValve 在getLogFile中会新建目录
+</code></pre>
+<img src="/img/Spring Framework RCE分析/image-20220403001849265.png" alt="image-20220403001849265" style="zoom:50%;" />
+
+<h3 id="02-多次上传的问题"><a href="#02-多次上传的问题" class="headerlink" title="02. 多次上传的问题"></a>02. 多次上传的问题</h3><p>​    第一次发包文件落地后，第二次发包，默认是不新建文件的，这个时候通过指定fileDateFormat=3，tomcat会新建一个文件，文件格式是<code>prefix + fileDateFormat + suffix</code>，fileDateFormat需要满足格式，这里随便输入数字即可</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">class.module.classLoader.resources.context.parent.pipeline.first.fileDateFormat&#x3D;1</span><br><span class="line">class.module.classLoader.resources.context.parent.pipeline.first.fileDateFormat&#x3D;2</span><br></pre></td></tr></table></figure>
+
+<img src="/img/Spring Framework RCE分析/image-20220403001924129.png" alt="image-20220403001924129" style="zoom:50%;" />
+
+<h3 id="03-特殊符号的问题"><a href="#03-特殊符号的问题" class="headerlink" title="03. 特殊符号的问题"></a>03. 特殊符号的问题</h3><p>​        熟悉access日志的还记得tomcat在配置日志时，通过%h %l %u等获取tomcat解析http后的内置字段，因此pattern中的%会被解析</p>
+<img src="/img/Spring Framework RCE分析/image-20220403002011555.png" alt="image-20220403002011555" style="zoom:50%;" />
+
+<p>​    因此需要通过<code>%&#123;headerName&#125;i</code>，获取自定义header字段，通过这种方式将%拼接在pattern中 </p>
+<img src="/img/Spring Framework RCE分析/image-20220403002037838.png" alt="image-20220403002037838" style="zoom:50%;" />
+
+<h3 id="04-SpringBoot"><a href="#04-SpringBoot" class="headerlink" title="04. SpringBoot"></a>04. SpringBoot</h3><p>​    SpringBoot中通过class → module → classLoader获取的是应用程序类加载器<code>AppClassLoader</code>；可继续使用的propertyDescriptors很有限，目前没有什么思路</p>
+<img src="/img/Spring Framework RCE分析/image-20220403002059502.png" alt="image-20220403002059502" style="zoom:50%;" />
+
+<h2 id="0x04-阶段总结"><a href="#0x04-阶段总结" class="headerlink" title="0x04 阶段总结"></a>0x04 阶段总结</h2><ol>
+<li><p>该漏洞和spring在3月29号更新的反序列化漏洞没有关系，默认spring也没有导入org.springframework.cache ，这次更新修复的是2月19号的一个pr</p>
+<img src="/img/Spring Framework RCE分析/image-20220403002119066.png" alt="image-20220403002119066" style="zoom:50%;" /></li>
+<li><p>目前的利用链</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">spring beans中的参数绑定中存在一个<span class="class"><span class="keyword">class</span>属性</span></span><br><span class="line"><span class="class">  - 通过<span class="title">jdk9</span>的<span class="title">module</span>特性，即<span class="title">class</span>中存在<span class="title">module</span>属性，<span class="title">bypass</span> <span class="title">CVE</span>-2010-1622，调用到<span class="title">ClassLoader</span></span></span><br><span class="line"><span class="class">    - 通过操作<span class="title">org</span>.<span class="title">apache</span>.<span class="title">catalina</span>.<span class="title">valves</span>.<span class="title">AccessLogValve</span>，指定日志路径并触发日志写入的操作，传入了<span class="title">webshell</span></span></span><br></pre></td></tr></table></figure></li>
+</ol>
+<p>  整个分析过程中，其实感觉还有利用链可以挖掘，不管这个漏洞危害如何，感觉很有意思；</p>
+<ul>
+<li><p>同时也思考一个问题，挖个漏洞的时候该怎么思考？</p>
+<p>我觉得首先应该有CVE-2010-1622和S2-020的分析经验吧，同时也了解过JDK9+的新特性，或者在调试老洞的时候误用了新的JDK</p>
+</li>
+<li><p>真牛</p>
+</li>
+<li><p>在spring框架调试中感到窒息</p>
+</li>
+</ul>
+<hr>
+<p>参考</p>
+<p>Spring参数绑定：<a target="_blank" rel="noopener" href="https://blog.csdn.net/AlbenXie/article/details/108548786">https://blog.csdn.net/AlbenXie/article/details/108548786</a></p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">首页</a></li>
+         
+          <li><a href="/search/">搜索</a></li>
+         
+          <li><a href="/categories/">分类</a></li>
+         
+          <li><a href="/tags/">标签</a></li>
+         
+          <li><a href="/archives/">归档</a></li>
+         
+          <li><a href="/link">链接</a></li>
+         
+          <li><a href="/atom.xml">RSS</a></li>
+         
+          <li><a href="/about/">关于</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#0x01-%E5%89%8D%E8%A8%80"><span class="toc-number">1.</span> <span class="toc-text">0x01 前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x02%E5%8F%82%E6%95%B0%E7%BB%91%E5%AE%9A%E6%B5%81%E7%A8%8B"><span class="toc-number">2.</span> <span class="toc-text">0x02参数绑定流程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Spring%E8%BF%90%E8%A1%8C%E6%B5%81%E7%A8%8B%E5%9B%BE"><span class="toc-number">2.1.</span> <span class="toc-text">1. Spring运行流程图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E7%BB%9F%E4%B8%80%E8%B0%83%E5%BA%A6%E6%96%B9%E6%B3%95"><span class="toc-number">2.2.</span> <span class="toc-text">2. 统一调度方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%A4%84%E7%90%86%E9%80%82%E9%85%8D%E5%99%A8%E7%9A%84%E5%A4%84%E7%90%86%E6%96%B9%E6%B3%95"><span class="toc-number">2.3.</span> <span class="toc-text">3. 处理适配器的处理方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E8%B0%83%E7%94%A8%E4%B8%8E%E5%A4%84%E7%90%86"><span class="toc-number">2.4.</span> <span class="toc-text">4. 调用与处理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-%E8%BF%9B%E5%85%A5%E5%8F%82%E6%95%B0%E7%BB%91%E5%AE%9A"><span class="toc-number">2.5.</span> <span class="toc-text">5. 进入参数绑定</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x02-%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90"><span class="toc-number">3.</span> <span class="toc-text">0x02 漏洞分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%8F%82%E6%95%B0%E5%90%8D%E7%9A%84%E5%88%86%E5%89%B2%E5%A4%84%E7%90%86"><span class="toc-number">3.1.</span> <span class="toc-text">1. 参数名的分割处理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%8F%82%E6%95%B0%E7%BB%91%E5%AE%9A%E7%9A%84%E6%84%8F%E5%A4%96%E6%83%85%E5%86%B5"><span class="toc-number">3.2.</span> <span class="toc-text">2. 参数绑定的意外情况</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%8F%91%E9%80%81class-x%E5%8F%82%E6%95%B0%E9%87%8D%E6%96%B0%E8%B0%83%E8%AF%95"><span class="toc-number">3.3.</span> <span class="toc-text">3. 发送class.x参数重新调试</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#04-JDK%E4%B8%8EBypass"><span class="toc-number">3.4.</span> <span class="toc-text">04. JDK与Bypass</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x03-%E5%88%A9%E7%94%A8%E9%93%BE%E6%9E%84%E9%80%A0"><span class="toc-number">4.</span> <span class="toc-text">0x03 利用链构造</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#01-%E7%9B%B8%E5%AF%B9%E8%B7%AF%E5%BE%84%E9%97%AE%E9%A2%98"><span class="toc-number">4.1.</span> <span class="toc-text">01 相对路径问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#02-%E5%A4%9A%E6%AC%A1%E4%B8%8A%E4%BC%A0%E7%9A%84%E9%97%AE%E9%A2%98"><span class="toc-number">4.2.</span> <span class="toc-text">02. 多次上传的问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#03-%E7%89%B9%E6%AE%8A%E7%AC%A6%E5%8F%B7%E7%9A%84%E9%97%AE%E9%A2%98"><span class="toc-number">4.3.</span> <span class="toc-text">03. 特殊符号的问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#04-SpringBoot"><span class="toc-number">4.4.</span> <span class="toc-text">04. SpringBoot</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x04-%E9%98%B6%E6%AE%B5%E6%80%BB%E7%BB%93"><span class="toc-number">5.</span> <span class="toc-text">0x04 阶段总结</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://blog.ninefiger.top/2022/04/02/Spring%20Framework%20RCE%E5%88%86%E6%9E%90/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://blog.ninefiger.top/2022/04/02/Spring%20Framework%20RCE%E5%88%86%E6%9E%90/&text=Spring Framework RCE分析"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://blog.ninefiger.top/2022/04/02/Spring%20Framework%20RCE%E5%88%86%E6%9E%90/&title=Spring Framework RCE分析"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.ninefiger.top/2022/04/02/Spring%20Framework%20RCE%E5%88%86%E6%9E%90/&is_video=false&description=Spring Framework RCE分析"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Spring Framework RCE分析&body=Check out this article: http://blog.ninefiger.top/2022/04/02/Spring%20Framework%20RCE%E5%88%86%E6%9E%90/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://blog.ninefiger.top/2022/04/02/Spring%20Framework%20RCE%E5%88%86%E6%9E%90/&title=Spring Framework RCE分析"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://blog.ninefiger.top/2022/04/02/Spring%20Framework%20RCE%E5%88%86%E6%9E%90/&title=Spring Framework RCE分析"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://blog.ninefiger.top/2022/04/02/Spring%20Framework%20RCE%E5%88%86%E6%9E%90/&title=Spring Framework RCE分析"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://blog.ninefiger.top/2022/04/02/Spring%20Framework%20RCE%E5%88%86%E6%9E%90/&title=Spring Framework RCE分析"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://blog.ninefiger.top/2022/04/02/Spring%20Framework%20RCE%E5%88%86%E6%9E%90/&name=Spring Framework RCE分析&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://blog.ninefiger.top/2022/04/02/Spring%20Framework%20RCE%E5%88%86%E6%9E%90/&t=Spring Framework RCE分析"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2017-2022
+    ninefiger
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">首页</a></li>
+         
+          <li><a href="/search/">搜索</a></li>
+         
+          <li><a href="/categories/">分类</a></li>
+         
+          <li><a href="/tags/">标签</a></li>
+         
+          <li><a href="/archives/">归档</a></li>
+         
+          <li><a href="/link">链接</a></li>
+         
+          <li><a href="/atom.xml">RSS</a></li>
+         
+          <li><a href="/about/">关于</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+
+</body>
+</html>
